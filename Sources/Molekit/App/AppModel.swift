@@ -24,6 +24,7 @@ final class AppModel: ObservableObject {
     let disk: DiskModel
     let purge: PurgeModel
     let tools: ToolsModel
+    let updates: UpdateModel
 
     init() {
         let saved = UserDefaults.standard.string(forKey: "language").flatMap(AppLanguage.init(rawValue:))
@@ -35,6 +36,7 @@ final class AppModel: ObservableObject {
         disk = DiskModel(cli: cli)
         purge = PurgeModel(cli: cli)
         tools = ToolsModel(cli: cli)
+        updates = UpdateModel(cli: cli)
         // If the app quit in the middle of a run, put Mole's whitelist back first.
         try? WhitelistSession().restore()
     }
@@ -392,5 +394,42 @@ final class ToolsModel: ObservableObject {
     func openInTerminal(_ command: String) {
         let script = "tell application \"Terminal\"\nactivate\ndo script \"\(command)\"\nend tell"
         NSAppleScript(source: script)?.executeAndReturnError(nil)
+    }
+}
+
+// MARK: - Mole updates
+
+@MainActor
+final class UpdateModel: ObservableObject {
+    enum State: Equatable { case checking, upToDate, available(String), updating, failed, offline }
+    @Published var installed: String?
+    @Published var state: State = .checking
+    private let cli: MoleCLI?
+    init(cli: MoleCLI?) { self.cli = cli }
+
+    var channel: MoleUpdate.Channel { cli.map(MoleUpdate.channel(of:)) ?? .homebrew }
+
+    func check() {
+        guard let cli else { return }
+        state = .checking
+        Task {
+            installed = await MoleUpdate.installedVersion(cli)
+            guard let latest = await MoleUpdate.latestVersion(channel: channel) else { state = .offline; return }
+            if let installed, MoleUpdate.isNewer(latest, than: installed) {
+                state = .available(latest)
+            } else {
+                state = .upToDate
+            }
+        }
+    }
+
+    /// `mo update` (Homebrew installs run brew upgrade under the hood).
+    func update() {
+        guard let cli else { return }
+        state = .updating
+        Task {
+            let out = try? await cli.run(["update"])
+            if out?.status == 0 { check() } else { state = .failed }
+        }
     }
 }

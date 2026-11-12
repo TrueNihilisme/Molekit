@@ -47,7 +47,6 @@ struct MoleLogo: View {
 
 struct SidebarView: View {
     @EnvironmentObject var app: AppModel
-    @State private var moVersion = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -66,30 +65,14 @@ struct SidebarView: View {
             }
             Spacer()
             languageToggle
-            HStack(spacing: 12) {
-                Text("i").font(.system(size: 13, weight: .heavy))
-                    .frame(width: 26, height: 26).background(Circle().fill(.white.opacity(0.12)))
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(app.t("sidebar.version", moVersion.isEmpty ? "—" : moVersion))
-                    Text("Homebrew")
-                }
-                .font(.system(size: 12)).foregroundStyle(Theme.secondary)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 12).padding(.vertical, 10)
-            .glassCard(radius: 12)
+            VersionCard(model: app.updates)
         }
         .padding(.horizontal, 14).padding(.bottom, 16)
         .frame(width: 236)
         .frame(maxHeight: .infinity)
         .background(LinearGradient(colors: [.white.opacity(0.055), .white.opacity(0.02)], startPoint: .top, endPoint: .bottom))
         .overlay(alignment: .trailing) { Rectangle().fill(.white.opacity(0.07)).frame(width: 1) }
-        .task {
-            if let out = try? await app.cli?.run(["--version"]),
-               let line = out.stdout.split(separator: "\n").first(where: { $0.contains("version") }) {
-                moVersion = line.components(separatedBy: " ").last ?? ""
-            }
-        }
+        .onAppear { app.updates.check() }
     }
 
     private func navButton(_ tab: Tab) -> some View {
@@ -108,6 +91,66 @@ struct SidebarView: View {
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.black.opacity(0.22)))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.white.opacity(0.07), lineWidth: 1))
         .padding(.top, 4).padding(.bottom, 8)
+    }
+}
+
+/// Bottom of the sidebar: installed Mole version and whether a newer one is out.
+struct VersionCard: View {
+    @EnvironmentObject var app: AppModel
+    @ObservedObject var model: UpdateModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Circle().fill(dotColor).frame(width: 8, height: 8).shadow(color: dotColor, radius: 4)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(app.t("sidebar.version", model.installed ?? "—")).font(.system(size: 12, weight: .semibold))
+                    Text(status).font(.system(size: 11)).foregroundStyle(Theme.secondary).lineLimit(2)
+                }
+                Spacer(minLength: 0)
+                if model.state == .checking || model.state == .updating { ProgressView().controlSize(.small) }
+            }
+            switch model.state {
+            case .available:
+                Button(app.t("update.button")) { model.update() }
+                    .buttonStyle(PrimaryButtonStyle(large: false))
+                    .frame(maxWidth: .infinity)
+            case .failed:
+                Button(app.t("tools.openTerminal")) { app.tools.openInTerminal("mo update") }
+                    .buttonStyle(GhostButtonStyle())
+            case .upToDate, .offline:
+                Button(app.t("update.check")) { model.check() }
+                    .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accent)
+            default:
+                EmptyView()
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .glassCard(radius: 12, highlighted: highlight)
+    }
+
+    private var highlight: Color? {
+        if case .available = model.state { return Theme.accent }
+        return nil
+    }
+    private var dotColor: Color {
+        switch model.state {
+        case .upToDate: return Theme.green
+        case .available: return Theme.accent
+        case .failed: return Theme.red
+        default: return Theme.tertiary
+        }
+    }
+    private var status: String {
+        let via = model.channel == .homebrew ? "Homebrew" : app.t("update.script")
+        switch model.state {
+        case .checking: return app.t("update.checking")
+        case .upToDate: return app.t("update.latest", via)
+        case .available(let v): return app.t("update.available", v)
+        case .updating: return app.t("update.updating")
+        case .failed: return app.t("update.failed")
+        case .offline: return app.t("update.offline", via)
+        }
     }
 }
 

@@ -67,27 +67,25 @@ struct OverviewView: View {
 
     private var macCard: some View {
         let s = status.snapshot
-        let specs: [(String, String)] = [
-            (app.t("mac.model"), s?.hardware?.model ?? "—"),
-            (app.t("mac.cpu"), [s?.hardware?.cpuModel, s?.cpu?.coreCount.map { app.t("mac.cores", $0) }].compactMap { $0 }.joined(separator: " · ")),
-            (app.t("mac.memory"), s?.hardware?.totalRam ?? "—"),
-            (app.t("mac.system"), s?.hardware?.osVersion ?? "—"),
-            (app.t("mac.uptime"), s?.uptime ?? "—"),
-            (app.t("mac.battery"), s?.batteries?.first.map { "\(Int($0.percent ?? 0))% · \($0.health ?? "")" } ?? "—")
+        // Each tile opens the matching place in macOS (pane IDs checked in /System/Library/ExtensionKit).
+        let specs: [(String, String, SystemLink)] = [
+            (app.t("mac.model"), s?.hardware?.model ?? "—", .about),
+            (app.t("mac.cpu"), [s?.hardware?.cpuModel, s?.cpu?.coreCount.map { app.t("mac.cores", $0) }].compactMap { $0 }.joined(separator: " · "), .about),
+            (app.t("mac.memory"), s?.hardware?.totalRam ?? "—", .activityMonitor),
+            (app.t("mac.system"), s?.hardware?.osVersion ?? "—", .softwareUpdate),
+            (app.t("mac.uptime"), s?.uptime ?? "—", .activityMonitor),
+            (app.t("mac.battery"), s?.batteries?.first.map { "\(Int($0.percent ?? 0))% · \($0.health ?? "")" } ?? "—", .battery)
         ]
         return VStack(alignment: .leading, spacing: 16) {
             Text(app.t("overview.thisMac")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
-                ForEach(specs, id: \.0) { k, v in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(k).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.62))
-                        Text(v.isEmpty ? "—" : v).font(.system(size: 16, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 16).padding(.vertical, 14).glassCard(radius: 14)
+                ForEach(specs, id: \.0) { k, v, link in
+                    SpecTile(title: k, value: v.isEmpty ? "—" : v, link: link)
                 }
             }
-            DiskBar()
+            Button { SystemLink.storage.open() } label: { DiskBar() }
+                .buttonStyle(.plain)
+                .help(app.t("link.storage"))
         }
         .padding(22).glassCard(radius: 18)
     }
@@ -661,5 +659,56 @@ struct MissingMoleView: View {
             .buttonStyle(PrimaryButtonStyle(large: false))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Links into macOS
+
+enum SystemLink {
+    case about, battery, storage, softwareUpdate, activityMonitor
+
+    func open() {
+        switch self {
+        case .activityMonitor:
+            NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"),
+                                               configuration: NSWorkspace.OpenConfiguration())
+        default:
+            let id: String = [
+                .about: "com.apple.SystemProfiler.AboutExtension",
+                .battery: "com.apple.Battery-Settings.extension",
+                .storage: "com.apple.settings.Storage",
+                .softwareUpdate: "com.apple.Software-Update-Settings.extension"
+            ][self]!
+            if let url = URL(string: "x-apple.systempreferences:" + id) { NSWorkspace.shared.open(url) }
+        }
+    }
+}
+
+/// A "This Mac" tile that opens the matching System Settings pane.
+struct SpecTile: View {
+    let title: String
+    let value: String
+    let link: SystemLink
+    @State private var hover = false
+
+    var body: some View {
+        Button { link.open() } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(title).font(.system(size: 12)).foregroundStyle(hover ? Theme.accent : Theme.text.opacity(0.62))
+                    Spacer()
+                    Image(systemName: "arrow.up.forward").font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Theme.accent).opacity(hover ? 1 : 0)
+                }
+                Text(value).font(.system(size: 16, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16).padding(.vertical, 14)
+            .glassCard(radius: 14, highlighted: hover ? Theme.accent : nil)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .animation(.easeOut(duration: 0.15), value: hover)
     }
 }

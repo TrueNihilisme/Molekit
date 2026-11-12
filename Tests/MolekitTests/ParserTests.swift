@@ -120,3 +120,18 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(PathDisplay.tilde("/Users/a/Library", home: "/Users/a"), "~/Library")
     }
 }
+
+final class UpdateTests: XCTestCase {
+    func testVersionCompare() {
+        XCTAssertTrue(MoleUpdate.isNewer("1.72.0", than: "1.71.0"))
+        XCTAssertTrue(MoleUpdate.isNewer("2.0.0", than: "1.99.9"))
+        XCTAssertFalse(MoleUpdate.isNewer("1.71.0", than: "1.71.0"))
+        XCTAssertFalse(MoleUpdate.isNewer("1.70.9", than: "1.71.0"))
+    }
+
+    func testLatestLive() async throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["MOLEKIT_LIVE"] == "1")
+        let v = await MoleUpdate.latestVersion(channel: .homebrew)
+        XCTAssertNotNil(v)
+    }
+}

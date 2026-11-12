@@ -6,6 +6,16 @@
 "nav.status" = "Status";
 "nav.history" = "History";
 "sidebar.version" = "mo version %@";
+"update.button" = "Update Mole";
+"update.check" = "Check for updates";
+"update.checking" = "Checking for updates…";
+"update.latest" = "Up to date · %@";
+"update.available" = "Mole %@ is out";
+"update.updating" = "Updating with mo update…";
+"update.failed" = "Update failed";
+"update.offline" = "Could not check · %@";
+"update.script" = "script install";
+"link.storage" = "Open Storage settings";
 "disk.freeOf" = "%@ free of %@";
 
 /* Clean */

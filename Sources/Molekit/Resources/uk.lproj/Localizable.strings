@@ -6,6 +6,16 @@
 "nav.status" = "Стан";
 "nav.history" = "Історія";
 "sidebar.version" = "Версія mo %@";
+"update.button" = "Оновити Mole";
+"update.check" = "Перевірити оновлення";
+"update.checking" = "Перевіряю оновлення…";
+"update.latest" = "Остання версія · %@";
+"update.available" = "Вийшла Mole %@";
+"update.updating" = "Оновлюю через mo update…";
+"update.failed" = "Не вдалося оновити";
+"update.offline" = "Не вдалося перевірити · %@";
+"update.script" = "встановлено скриптом";
+"link.storage" = "Відкрити налаштування сховища";
 "disk.freeOf" = "Вільно %@ з %@";
 
 /* Очищення */
