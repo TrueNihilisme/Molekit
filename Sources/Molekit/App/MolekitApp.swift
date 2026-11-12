@@ -4,6 +4,8 @@ import SwiftUI
 struct MolekitApp: App {
     @StateObject private var app = AppModel()
 
+    init() { Fonts.register() }
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -47,7 +49,14 @@ struct RootView: View {
         case .clean: CleanView(model: app.clean)
         case .overview: OverviewView(status: app.status, clean: app.clean, purge: app.purge, history: app.history)
         case .tools:
-            if app.showPurge { PurgeView(model: app.purge) } else { ToolsView(tools: app.tools, purge: app.purge) }
+            switch app.toolScreen {
+            case .purge?: PurgeView(model: app.purge)
+            case .uninstall?: UninstallView(tools: app.tools)
+            case .optimize?: OptimizeView(tools: app.tools)
+            case .slim?: SlimView(tools: app.tools)
+            case .installer?: InstallerView(tools: app.tools)
+            case nil: ToolsView(tools: app.tools, purge: app.purge)
+            }
         case .disk: DiskView(model: app.disk)
         case .status: StatusView(model: app.status)
         case .history: HistoryView(model: app.history)

@@ -16,6 +16,36 @@
 "update.offline" = "Could not check · %@";
 "update.script" = "script install";
 "link.storage" = "Open Storage settings";
+"term.close" = "Close";
+"term.hint" = "mo is running. Answer its questions here.";
+"term.done" = "Finished";
+"term.ended" = "Stopped";
+"tools.steps" = "%ld checks";
+"tools.nothing" = "Nothing found";
+"tools.files" = "%ld files";
+"uninstall.subtitle" = "Pick an app to see exactly what goes and what stays.";
+"uninstall.search" = "Search apps";
+"uninstall.selected" = "Selected: %@";
+"uninstall.pick" = "Pick an app on the left";
+"uninstall.run" = "Uninstall…";
+"uninstall.willRemove" = "Will be removed";
+"uninstall.keeps" = "Personal data kept";
+"uninstall.keepsHint" = "Mole keeps these unless you choose them in its confirmation (D).";
+"uninstall.pickHint" = "Pick an app to preview the uninstall.";
+"optimize.subtitle" = "What mo optimize will check and refresh.";
+"optimize.prompt" = "Mole checks caches, services and settings. Nothing changes during the preview.";
+"optimize.summary" = "%ld steps";
+"optimize.run" = "Optimize…";
+"slim.subtitle" = "Universal apps carry Intel code your Mac does not use. Updates bring it back.";
+"slim.prompt" = "Find apps with Intel code. Nothing changes during the preview.";
+"slim.summary" = "%ld apps · %@ of Intel code";
+"slim.run" = "Slim…";
+"installer.subtitle" = "Forgotten .dmg, .pkg, .iso, .xip and .zip installers.";
+"installer.prompt" = "Look for installer files you no longer need.";
+"installer.none" = "No installer files found";
+"installer.run" = "Remove…";
+"purge.prompt" = "Find build output in your projects. Nothing is removed during the scan.";
+"overview.healthHint" = "Mole's score: starts at 100, loses points for high CPU or memory load, a nearly full disk, heat and battery wear.";
 "disk.freeOf" = "%@ free of %@";
 
 /* Clean */
@@ -53,6 +83,7 @@
 "clean.details" = "Details";
 "clean.moreFolders" = "%@ and %ld more";
 "clean.row.cleaning" = "cleaning…";
+"clean.row.clean" = "Clean";
 "clean.row.skipped" = "skipped";
 
 /* Overview */

@@ -11,7 +11,6 @@ struct CleanView: View {
             list.frame(width: 512)
         }
         .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
-        .onAppear { if model.phase == .idle { model.scan() } }
     }
 
     // MARK: centre column
@@ -20,7 +19,7 @@ struct CleanView: View {
         VStack(spacing: 0) {
             VStack(spacing: 14) {
                 LiveChip(text: chipText)
-                Text(title).font(.system(size: 38, weight: .heavy)).tracking(-0.8)
+                Text(title).font(.ui(38, .heavy)).tracking(-0.8)
                     .shadow(color: .black.opacity(0.35), radius: 8, y: 2)
                     .multilineTextAlignment(.center)
             }
@@ -32,22 +31,22 @@ struct CleanView: View {
                 VStack(spacing: 2) {
                     if model.phase == .done {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 20, weight: .heavy)).foregroundStyle(Theme.greenInk)
+                            .font(.ui(20, .heavy)).foregroundStyle(Theme.greenInk)
                             .frame(width: 44, height: 44).background(Circle().fill(Theme.greenGradient))
                             .shadow(color: Theme.greenBottom.opacity(0.4), radius: 9, y: 6)
                             .padding(.bottom, 6)
                     }
                     Text(ringNumber)
-                        .font(.system(size: 66, weight: .heavy)).monospacedDigit().tracking(-2)
+                        .font(.ui(66, .heavy)).monospacedDigit().tracking(-2)
                         .shadow(color: Theme.accent.opacity(0.25), radius: 12)
                         .contentTransition(.numericText())
-                    Text(ringUnit).font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.text.opacity(0.9)).padding(.top, 6)
-                    Text(ringLabel).font(.system(size: 14)).foregroundStyle(Theme.text.opacity(0.6))
+                    Text(ringUnit).font(.ui(18, .bold)).foregroundStyle(Theme.text.opacity(0.9)).padding(.top, 6)
+                    Text(ringLabel).font(.ui(14)).foregroundStyle(Theme.text.opacity(0.6))
                 }
             }
             Spacer(minLength: 12)
             VStack(spacing: 18) {
-                Text(hint).font(.system(size: 14)).foregroundStyle(Theme.secondary).frame(minHeight: 20)
+                Text(hint).font(.ui(14)).foregroundStyle(Theme.secondary).frame(minHeight: 20)
                     .multilineTextAlignment(.center)
                 actionButton
             }
@@ -86,10 +85,10 @@ struct CleanView: View {
                 if model.phase == .found {
                     GreenCheckbox(isOn: Binding(get: { model.allSelected }, set: { _ in model.toggleAll() }), label: app.t("clean.selectAll"))
                 }
-                Text(listHead).font(.system(size: 15, weight: .semibold))
+                Text(listHead).font(.ui(15, .semibold))
                 Spacer()
                 Text(app.size(listTotal))
-                    .font(.system(size: 19, weight: .heavy)).monospacedDigit()
+                    .font(.ui(19, .heavy)).monospacedDigit()
                     .foregroundStyle(Theme.accent).shadow(color: Theme.accent.opacity(0.35), radius: 8)
                     .contentTransition(.numericText())
             }
@@ -103,6 +102,21 @@ struct CleanView: View {
                     } else {
                         ForEach(Array(model.sections.enumerated()), id: \.element.id) { index, section in
                             SectionRow(model: model, section: section, mark: mark(for: section, index: index))
+                        }
+                        if model.phase == .found || model.phase == .done {
+                            ForEach(model.cleanSections) { section in
+                                HStack(spacing: 12) {
+                                    Image(systemName: "checkmark.circle.fill").font(.ui(18)).foregroundStyle(Theme.green.opacity(0.7))
+                                        .frame(width: 24)
+                                    GlyphTile(symbol: SectionStyle.symbol(for: section.title), size: 34, dimmed: true)
+                                    Text(SectionStyle.name(section.title, app: app)).font(.ui(13, .medium)).foregroundStyle(Theme.secondary)
+                                    Spacer()
+                                    Text(app.t("clean.row.clean")).font(.ui(12, .semibold)).foregroundStyle(Theme.green.opacity(0.8))
+                                }
+                                .padding(.leading, 16).padding(.trailing, 16).frame(height: 44)
+                                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.025)))
+                                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.white.opacity(0.05), lineWidth: 1))
+                            }
                         }
                     }
                 }
@@ -120,7 +134,7 @@ struct CleanView: View {
                 RoundedRectangle(cornerRadius: 4).fill(.white.opacity(0.08)).frame(width: 160, height: 12)
                 Spacer()
                 Text(model.phase == .scanning ? app.t("clean.scanningShort") : "")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.tertiary)
+                    .font(.ui(13, .semibold)).foregroundStyle(Theme.tertiary)
             }
             .padding(.horizontal, 16).frame(height: 58)
             .glassCard()
@@ -253,18 +267,18 @@ struct SectionRow: View {
                 }
                 GlyphTile(symbol: SectionStyle.symbol(for: section.title), dimmed: mark == .skipped)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(SectionStyle.name(section.title, app: app)).font(.system(size: 14, weight: .semibold)).lineLimit(1)
-                    Text(subtitle).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.6)).lineLimit(1)
+                    Text(SectionStyle.name(section.title, app: app)).font(.ui(14, .semibold)).lineLimit(1)
+                    Text(subtitle).font(.ui(12)).foregroundStyle(Theme.text.opacity(0.6)).lineLimit(1)
                 }
                 Spacer(minLength: 8)
-                Text(rightText).font(.system(size: 14, weight: .bold)).monospacedDigit()
+                Text(rightText).font(.ui(14, .bold)).monospacedDigit()
                     .foregroundStyle(rightColor).frame(minWidth: 76, alignment: .trailing)
                 Button {
                     withAnimation(.easeOut(duration: 0.2)) {
                         if expanded { model.expanded.remove(section.id) } else { model.expanded.insert(section.id) }
                     }
                 } label: {
-                    Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold))
+                    Image(systemName: "chevron.right").font(.ui(12, .bold))
                         .foregroundStyle(Theme.tertiary).rotationEffect(.degrees(expanded ? 90 : 0))
                         .frame(width: 28, height: 28).contentShape(Rectangle())
                 }
@@ -277,10 +291,10 @@ struct SectionRow: View {
                 VStack(spacing: 4) {
                     ForEach(section.items) { item in
                         HStack {
-                            Text(PathDisplay.tilde(item.path)).font(.system(size: 12, design: .monospaced))
+                            Text(PathDisplay.tilde(item.path)).font(.mono(12))
                                 .foregroundStyle(Theme.secondary).lineLimit(1).truncationMode(.middle)
                             Spacer()
-                            Text(app.size(item.bytes)).font(.system(size: 12, weight: .semibold)).monospacedDigit()
+                            Text(app.size(item.bytes)).font(.ui(12, .semibold)).monospacedDigit()
                         }
                     }
                 }

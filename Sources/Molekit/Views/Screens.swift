@@ -18,12 +18,12 @@ struct OverviewView: View {
                 macCard
             }
             .fixedSize(horizontal: false, vertical: true)
-            Text(app.t("overview.actions")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+            Text(app.t("overview.actions")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
             HStack(spacing: 14) {
                 actionCard(symbol: "sparkles", title: app.t("nav.clean"), hint: app.t("overview.clean.hint"),
                            value: clean.preview.map { app.size($0.total) } ?? app.t("overview.scan")) { app.tab = .clean }
                 actionCard(symbol: "folder.badge.gearshape", title: app.t("tools.purge.title"), hint: "build, node_modules, .venv",
-                           value: purge.preview.map { app.size($0.total) } ?? app.t("overview.scan")) { app.tab = .tools; app.showPurge = true }
+                           value: purge.preview.map { app.size($0.total) } ?? app.t("overview.scan")) { app.tab = .tools; app.toolScreen = .purge }
                 actionCard(symbol: "trash.fill", title: app.t("overview.trash"), hint: app.t("overview.trash.hint"),
                            value: status.snapshot?.trashSize.map(app.size) ?? "—") { NSWorkspace.shared.open(URL(fileURLWithPath: NSHomeDirectory() + "/.Trash")) }
             }
@@ -35,9 +35,9 @@ struct OverviewView: View {
                 }
                 Spacer()
                 Button(app.t("nav.history") + " ›") { app.tab = .history }
-                    .buttonStyle(.plain).foregroundStyle(Theme.accent).font(.system(size: 13, weight: .semibold))
+                    .buttonStyle(.plain).foregroundStyle(Theme.accent).font(.ui(13, .semibold))
             }
-            .font(.system(size: 13)).foregroundStyle(Theme.text.opacity(0.85))
+            .font(.ui(13)).foregroundStyle(Theme.text.opacity(0.85))
             .padding(.horizontal, 18).padding(.vertical, 14).glassCard()
         }
         .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
@@ -46,16 +46,18 @@ struct OverviewView: View {
 
     private var healthCard: some View {
         VStack(spacing: 14) {
-            Text(app.t("overview.health")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+            Text(app.t("overview.health")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
                 .frame(maxWidth: .infinity, alignment: .leading)
             ZStack {
                 ProgressRing(progress: Double(status.snapshot?.healthScore ?? 0) / 100, size: 168, lineWidth: 8)
                 VStack(spacing: 2) {
-                    Text("\(status.snapshot?.healthScore ?? 0)").font(.system(size: 46, weight: .heavy)).monospacedDigit()
-                    Text(app.t("overview.of100")).font(.system(size: 13)).foregroundStyle(Theme.secondary)
+                    Text("\(status.snapshot?.healthScore ?? 0)").font(.ui(46, .heavy)).monospacedDigit()
+                    Text(app.t("overview.of100")).font(.ui(13)).foregroundStyle(Theme.secondary)
                 }
             }
-            Text(healthWord).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.accent)
+            Text(healthWord).font(.ui(16, .bold)).foregroundStyle(Theme.accent)
+            Text(app.t("overview.healthHint")).font(.ui(12)).foregroundStyle(Theme.tertiary)
+                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
         }
         .padding(22).frame(maxHeight: .infinity, alignment: .top).glassCard(radius: 18)
     }
@@ -77,7 +79,7 @@ struct OverviewView: View {
             (app.t("mac.battery"), s?.batteries?.first.map { "\(Int($0.percent ?? 0))% · \($0.health ?? "")" } ?? "—", .battery)
         ]
         return VStack(alignment: .leading, spacing: 16) {
-            Text(app.t("overview.thisMac")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+            Text(app.t("overview.thisMac")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
                 ForEach(specs, id: \.0) { k, v, link in
                     SpecTile(title: k, value: v.isEmpty ? "—" : v, link: link)
@@ -95,9 +97,9 @@ struct OverviewView: View {
             VStack(spacing: 12) {
                 BigTile(symbol: symbol, size: 80)
                 VStack(spacing: 4) {
-                    Text(title).font(.system(size: 17, weight: .bold))
-                    Text(hint).font(.system(size: 13)).foregroundStyle(Theme.secondary).lineLimit(1)
-                    Text(value).font(.system(size: 26, weight: .heavy)).monospacedDigit()
+                    Text(title).font(.ui(17, .bold))
+                    Text(hint).font(.ui(13)).foregroundStyle(Theme.secondary).lineLimit(1)
+                    Text(value).font(.ui(26, .heavy)).monospacedDigit()
                         .foregroundStyle(Theme.accent).shadow(color: Theme.accent.opacity(0.35), radius: 8).padding(.top, 2)
                 }
             }
@@ -124,38 +126,38 @@ struct ToolsView: View {
                 GridRow {
                     card(symbol: "folder.badge.gearshape", title: app.t("tools.purge.title"), command: "mo purge", desc: app.t("tools.purge.desc"),
                          status: purge.preview.map { app.size($0.total) } ?? app.t("tools.notScanned"), highlight: purge.preview != nil,
-                         action: app.t("tools.open"), primary: true) { app.showPurge = true }
+                         action: app.t("tools.open"), primary: true) { app.toolScreen = .purge }
                     card(symbol: "trash.fill", title: app.t("tools.uninstall.title"), command: "mo uninstall", desc: app.t("tools.uninstall.desc"),
-                         status: tools.appCount.map { app.t("tools.apps", $0) } ?? "…", action: app.t("tools.openTerminal")) { tools.openInTerminal("mo uninstall") }
+                         status: tools.appCount.map { app.t("tools.apps", $0) } ?? "…", action: app.t("tools.open")) { app.toolScreen = .uninstall }
                     card(symbol: "bolt.fill", title: app.t("tools.optimize.title"), command: "mo optimize", desc: app.t("tools.optimize.desc"),
-                         status: "", action: app.t("tools.openTerminal")) { tools.openInTerminal("mo optimize") }
+                         status: tools.optimize.map { app.t("tools.steps", $0.steps.count) } ?? "", action: app.t("tools.open")) { app.toolScreen = .optimize }
                 }
                 GridRow {
                     card(symbol: "arrow.down.to.line", title: app.t("tools.installer.title"), command: "mo installer", desc: app.t("tools.installer.desc"),
-                         status: "", action: app.t("tools.openTerminal")) { tools.openInTerminal("mo installer") }
+                         status: tools.installer.map { $0.files.isEmpty ? app.t("tools.nothing") : app.t("tools.files", $0.files.count) } ?? "", action: app.t("tools.open")) { app.toolScreen = .installer }
                     card(symbol: "cpu.fill", title: app.t("tools.slim.title"), command: "mo slim", desc: app.t("tools.slim.desc"),
-                         status: "", action: app.t("tools.openTerminal")) { tools.openInTerminal("mo slim") }
+                         status: tools.slim.map { app.size($0.total) } ?? "", highlight: tools.slim != nil, action: app.t("tools.open")) { app.toolScreen = .slim }
                     Color.clear
                 }
             }
         }
         .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
-        .onAppear { tools.load(); if purge.phase == .idle { purge.scan() } }
+        .onAppear { tools.load() }
     }
 
     private func card(symbol: String, title: String, command: String, desc: String, status: String, highlight: Bool = false,
                       action: String, primary: Bool = false, perform: @escaping () -> Void) -> some View {
         VStack(spacing: 10) {
             BigTile(symbol: symbol, size: 96)
-            Text(title).font(.system(size: 17, weight: .bold)).padding(.top, 4)
-            Text(command).font(.system(size: 12, design: .monospaced)).foregroundStyle(Theme.text.opacity(0.78))
+            Text(title).font(.ui(17, .bold)).padding(.top, 4)
+            Text(command).font(.mono(12)).foregroundStyle(Theme.text.opacity(0.78))
                 .padding(.horizontal, 10).padding(.vertical, 3)
                 .background(RoundedRectangle(cornerRadius: 8).fill(.black.opacity(0.28)))
-            Text(desc).font(.system(size: 13)).foregroundStyle(Theme.text.opacity(0.66)).multilineTextAlignment(.center)
+            Text(desc).font(.ui(13)).foregroundStyle(Theme.text.opacity(0.66)).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             HStack(spacing: 10) {
-                Text(status).font(.system(size: 14, weight: .bold)).lineLimit(1)
+                Text(status).font(.ui(14, .bold)).lineLimit(1)
                     .foregroundStyle(highlight ? Theme.accent : Theme.text.opacity(0.78))
                 Spacer(minLength: 0)
                 if primary {
@@ -179,15 +181,18 @@ struct PurgeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Button("‹ " + app.t("nav.tools")) { app.showPurge = false }
-                .buttonStyle(.plain).foregroundStyle(Theme.accent).font(.system(size: 13, weight: .semibold))
+            Button("‹ " + app.t("nav.tools")) { app.toolScreen = nil }
+                .buttonStyle(.plain).foregroundStyle(Theme.accent).font(.ui(13, .semibold))
             PageHeader(title: app.t("tools.purge.title"), subtitle: app.t("purge.subtitle")) {
                 Button(app.t("purge.rescan")) { model.scan() }.buttonStyle(GhostButtonStyle())
             }
             ScrollView {
                 LazyVStack(spacing: 6) {
                     switch model.phase {
-                    case .scanning, .idle:
+                    case .idle:
+                        ScanPrompt(symbol: "folder.badge.gearshape", text: app.t("purge.prompt"), busy: false) { model.scan() }
+                            .frame(height: 420)
+                    case .scanning:
                         ProgressView().controlSize(.large).padding(40)
                     case .failed(let message):
                         Text(message).foregroundStyle(Theme.red).padding()
@@ -208,7 +213,7 @@ struct PurgeView: View {
                         Text(app.t("purge.selected")) + Text(" " + app.size(model.selectedBytes)).foregroundColor(Theme.accent).bold()
                     }
                 }
-                .font(.system(size: 14))
+                .font(.ui(14))
                 Spacer()
                 Button(app.t("purge.run")) { model.run() }
                     .buttonStyle(PrimaryButtonStyle(large: false))
@@ -219,7 +224,6 @@ struct PurgeView: View {
             .glassCard(radius: 20, highlighted: .white)
         }
         .padding(.top, 20).padding(.horizontal, 24).padding(.bottom, 22)
-        .onAppear { if model.phase == .idle { model.scan() } }
     }
 
     private func row(_ item: PurgePreview.Item) -> some View {
@@ -227,14 +231,14 @@ struct PurgeView: View {
             GreenCheckbox(isOn: Binding(get: { !model.deselected.contains(item.path) }, set: { _ in model.toggle(item.path) }), label: item.path)
             GlyphTile(symbol: symbol(item.kind))
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.path).font(.system(size: 14, weight: .semibold)).lineLimit(1).truncationMode(.middle)
+                Text(item.path).font(.ui(14, .semibold)).lineLimit(1).truncationMode(.middle)
                 Text(app.t(item.needsManualRestore ? "purge.manual" : "purge.rebuilds"))
-                    .font(.system(size: 12)).foregroundStyle(item.needsManualRestore ? Color(hex: 0xF2C46B) : Theme.text.opacity(0.6))
+                    .font(.ui(12)).foregroundStyle(item.needsManualRestore ? Color(hex: 0xF2C46B) : Theme.text.opacity(0.6))
             }
             Spacer()
-            Text(item.kind).font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.82))
+            Text(item.kind).font(.ui(12, .semibold)).foregroundStyle(Theme.text.opacity(0.82))
                 .padding(.horizontal, 10).padding(.vertical, 4).background(Capsule().fill(.black.opacity(0.25)))
-            Text(app.size(item.bytes)).font(.system(size: 14, weight: .bold)).monospacedDigit().frame(width: 86, alignment: .trailing)
+            Text(app.size(item.bytes)).font(.ui(14, .bold)).monospacedDigit().frame(width: 86, alignment: .trailing)
         }
         .padding(.horizontal, 16).frame(height: 60).glassCard()
     }
@@ -295,7 +299,7 @@ struct DiskView: View {
                 Text(app.t("disk.inFolder", app.size(level.total), level.entries.count)).foregroundStyle(Theme.secondary)
             }
         }
-        .font(.system(size: 13))
+        .font(.ui(13))
         .padding(.horizontal, 16).frame(height: 40)
         .glassCard(radius: 12)
     }
@@ -330,10 +334,10 @@ struct DiskView: View {
     private var side: some View {
         VStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Macintosh HD").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+                Text("Macintosh HD").font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
                 if let space = DiskSpace.root() {
-                    (Text(app.size(space.free)).foregroundColor(Theme.accent) + Text("  " + app.t("disk.free")).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.secondary))
-                        .font(.system(size: 30, weight: .heavy))
+                    (Text(app.size(space.free)).foregroundColor(Theme.accent) + Text("  " + app.t("disk.free")).font(.ui(15, .semibold)).foregroundColor(Theme.secondary))
+                        .font(.ui(30, .heavy))
                         .shadow(color: Theme.accent.opacity(0.3), radius: 8)
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -345,13 +349,13 @@ struct DiskView: View {
                     }
                     .frame(height: 8)
                     Text(app.t("disk.usedOf", app.size(space.total - space.free), app.size(space.total)))
-                        .font(.system(size: 12)).foregroundStyle(Theme.secondary)
+                        .font(.ui(12)).foregroundStyle(Theme.secondary)
                 }
             }
             .padding(18).frame(maxWidth: .infinity, alignment: .leading).glassCard(radius: 20)
 
             VStack(alignment: .leading, spacing: 10) {
-                Text(app.t("disk.bigFiles")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+                Text(app.t("disk.bigFiles")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
                 let files = model.current?.largeFiles ?? []
                 if files.isEmpty {
                     Text("—").foregroundStyle(Theme.tertiary)
@@ -360,19 +364,19 @@ struct DiskView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "doc").foregroundStyle(Color(hex: 0x7EA6D8))
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(file.name).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                            Text(file.name).font(.ui(13, .semibold)).lineLimit(1)
                             Text(PathDisplay.tilde((file.path as NSString).deletingLastPathComponent))
-                                .font(.system(size: 11)).foregroundStyle(Theme.tertiary).lineLimit(1).truncationMode(.middle)
+                                .font(.ui(11)).foregroundStyle(Theme.tertiary).lineLimit(1).truncationMode(.middle)
                         }
                         Spacer(minLength: 4)
-                        Text(app.size(file.size)).font(.system(size: 13, weight: .bold)).monospacedDigit()
+                        Text(app.size(file.size)).font(.ui(13, .bold)).monospacedDigit()
                     }
                     .padding(.horizontal, 12).padding(.vertical, 10)
                     .background(RoundedRectangle(cornerRadius: 12).fill(.black.opacity(0.2)))
                     .contextMenu { RevealButton(path: file.path) }
                 }
                 Spacer(minLength: 0)
-                Text(app.t("disk.rightClick")).font(.system(size: 12)).foregroundStyle(Theme.tertiary)
+                Text(app.t("disk.rightClick")).font(.ui(12)).foregroundStyle(Theme.tertiary)
             }
             .padding(18).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).glassCard(radius: 20)
         }
@@ -394,8 +398,8 @@ struct DiskRow: View {
             HStack(spacing: 14) {
                 GlyphTile(symbol: isFolder ? (entry.path.hasSuffix(".app") ? "app" : "folder") : "doc")
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.name).font(.system(size: 14, weight: .semibold)).lineLimit(1)
-                    Text(PathDisplay.tilde(entry.path)).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.58))
+                    Text(entry.name).font(.ui(14, .semibold)).lineLimit(1)
+                    Text(PathDisplay.tilde(entry.path)).font(.ui(12)).foregroundStyle(Theme.text.opacity(0.58))
                         .lineLimit(1).truncationMode(.middle)
                 }
                 .frame(width: 230, alignment: .leading)
@@ -408,9 +412,9 @@ struct DiskRow: View {
                 }
                 .frame(height: 8)
                 Text(share < 0.01 ? "<1%" : "\(Int((share * 100).rounded()))%")
-                    .font(.system(size: 13)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.7)).frame(width: 46, alignment: .trailing)
-                Text(app.size(entry.size)).font(.system(size: 15, weight: .bold)).monospacedDigit().frame(width: 84, alignment: .trailing)
-                Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold))
+                    .font(.ui(13)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.7)).frame(width: 46, alignment: .trailing)
+                Text(app.size(entry.size)).font(.ui(15, .bold)).monospacedDigit().frame(width: 84, alignment: .trailing)
+                Image(systemName: "chevron.right").font(.ui(12, .bold))
                     .foregroundStyle(Theme.tertiary).opacity(isFolder ? 1 : 0)
             }
             .padding(.horizontal, 14).frame(height: 60)
@@ -479,8 +483,8 @@ struct StatusView: View {
 
     private func tile(_ title: String, _ value: String, _ fraction: Double, _ sub: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.7))
-            Text(value).font(.system(size: 30, weight: .heavy)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+            Text(title).font(.ui(13, .semibold)).foregroundStyle(Theme.text.opacity(0.7))
+            Text(value).font(.ui(30, .heavy)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
                 .contentTransition(.numericText())
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -490,7 +494,7 @@ struct StatusView: View {
                 }
             }
             .frame(height: 6)
-            Text(sub).font(.system(size: 12)).foregroundStyle(Theme.secondary).lineLimit(1)
+            Text(sub).font(.ui(12)).foregroundStyle(Theme.secondary).lineLimit(1)
         }
         .padding(.horizontal, 20).padding(.vertical, 18)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -502,11 +506,11 @@ struct StatusView: View {
         let per = model.snapshot?.cpu?.perCore ?? []
         let p = model.snapshot?.cpu?.pCoreCount ?? 0
         return VStack(alignment: .leading, spacing: 14) {
-            Text(app.t("status.cores")).font(.system(size: 15, weight: .semibold))
+            Text(app.t("status.cores")).font(.ui(15, .semibold))
             HStack(alignment: .bottom, spacing: 10) {
                 ForEach(Array(per.enumerated()), id: \.offset) { i, v in
                     VStack(spacing: 6) {
-                        Text("\(Int(v))%").font(.system(size: 11)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.7))
+                        Text("\(Int(v))%").font(.ui(11)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.7))
                         GeometryReader { geo in
                             VStack { Spacer(minLength: 0)
                                 RoundedRectangle(cornerRadius: 8)
@@ -516,7 +520,7 @@ struct StatusView: View {
                             }
                         }
                         .background(RoundedRectangle(cornerRadius: 8).fill(.white.opacity(0.06)))
-                        Text(i < p ? "P\(i + 1)" : "E\(i - p + 1)").font(.system(size: 11)).foregroundStyle(Theme.tertiary)
+                        Text(i < p ? "P\(i + 1)" : "E\(i - p + 1)").font(.ui(11)).foregroundStyle(Theme.tertiary)
                     }
                     .animation(.easeOut(duration: 0.4), value: v)
                 }
@@ -527,10 +531,10 @@ struct StatusView: View {
 
     private var processes: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(app.t("status.processes")).font(.system(size: 15, weight: .semibold)).padding(.bottom, 6)
+            Text(app.t("status.processes")).font(.ui(15, .semibold)).padding(.bottom, 6)
             ForEach((model.snapshot?.topProcesses ?? []).prefix(6)) { proc in
                 HStack(spacing: 12) {
-                    Text(proc.name ?? "?").font(.system(size: 14, weight: .medium)).lineLimit(1)
+                    Text(proc.name ?? "?").font(.ui(14, .medium)).lineLimit(1)
                     Spacer()
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -539,8 +543,8 @@ struct StatusView: View {
                         }
                     }
                     .frame(width: 120, height: 6)
-                    Text(String(format: "%.1f%%", proc.cpu ?? 0)).font(.system(size: 13, weight: .bold)).monospacedDigit().frame(width: 58, alignment: .trailing)
-                    Text(app.size(proc.memoryBytes ?? 0)).font(.system(size: 12)).foregroundStyle(Theme.secondary).monospacedDigit().frame(width: 70, alignment: .trailing)
+                    Text(String(format: "%.1f%%", proc.cpu ?? 0)).font(.ui(13, .bold)).monospacedDigit().frame(width: 58, alignment: .trailing)
+                    Text(app.size(proc.memoryBytes ?? 0)).font(.ui(12)).foregroundStyle(Theme.secondary).monospacedDigit().frame(width: 70, alignment: .trailing)
                 }
                 .padding(.horizontal, 12).frame(height: 44)
                 .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.04)))
@@ -567,7 +571,7 @@ struct HistoryView: View {
                 stat("clock", app.t("history.runsToday"), "\(today.count)", Theme.accent)
                 stat("checkmark.shield.fill", app.t("history.errors"), "\(failed)", failed == 0 ? Theme.green : Theme.red)
             }
-            Text(app.t("history.recent")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+            Text(app.t("history.recent")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
             ScrollView {
                 LazyVStack(spacing: 6) {
                     ForEach(model.sessions) { row($0) }
@@ -586,8 +590,8 @@ struct HistoryView: View {
         HStack(spacing: 16) {
             GlyphTile(symbol: symbol, size: 64, tint: color)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.68))
-                Text(value).font(.system(size: 30, weight: .heavy)).monospacedDigit().foregroundStyle(color)
+                Text(title).font(.ui(13, .semibold)).foregroundStyle(Theme.text.opacity(0.68))
+                Text(value).font(.ui(30, .heavy)).monospacedDigit().foregroundStyle(color)
                     .shadow(color: color.opacity(0.35), radius: 8)
             }
             Spacer(minLength: 0)
@@ -600,23 +604,23 @@ struct HistoryView: View {
         let date = HistoryModel.date(s.startedAt)
         return HStack(spacing: 14) {
             Text(date.map { $0.formatted(date: Calendar.current.isDateInToday($0) ? .omitted : .abbreviated, time: .shortened) } ?? "—")
-                .font(.system(size: 13, weight: .semibold)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.78))
+                .font(.ui(13, .semibold)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.78))
                 .frame(width: 110, alignment: .leading)
             GlyphTile(symbol: symbol(s.baseCommand))
             VStack(alignment: .leading, spacing: 2) {
-                Text(name(s.baseCommand)).font(.system(size: 14, weight: .semibold))
-                Text(app.t(done ? "history.itemsRemoved" : "history.itemsFound", s.items ?? 0)).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.6))
+                Text(name(s.baseCommand)).font(.ui(14, .semibold))
+                Text(app.t(done ? "history.itemsRemoved" : "history.itemsFound", s.items ?? 0)).font(.ui(12)).foregroundStyle(Theme.text.opacity(0.6))
             }
             Spacer()
             HStack(spacing: 6) {
-                if done { Image(systemName: "checkmark").font(.system(size: 10, weight: .heavy)) }
+                if done { Image(systemName: "checkmark").font(.ui(10, .heavy)) }
                 Text(app.t(done ? "history.done" : "history.preview"))
             }
-            .font(.system(size: 12, weight: .bold))
+            .font(.ui(12, .bold))
             .foregroundStyle(done ? Theme.greenInk : Theme.text.opacity(0.75))
             .padding(.horizontal, 12).padding(.vertical, 5)
             .background(Capsule().fill(done ? AnyShapeStyle(Theme.greenGradient) : AnyShapeStyle(Color.black.opacity(0.25))))
-            Text(s.sizeBytes > 0 ? app.size(s.sizeBytes) : "—").font(.system(size: 15, weight: .bold)).monospacedDigit()
+            Text(s.sizeBytes > 0 ? app.size(s.sizeBytes) : "—").font(.ui(15, .bold)).monospacedDigit()
                 .foregroundStyle(done ? Theme.green : Theme.text).frame(width: 92, alignment: .trailing)
         }
         .padding(.horizontal, 18).frame(height: 62)
@@ -647,9 +651,9 @@ struct MissingMoleView: View {
     var body: some View {
         VStack(spacing: 18) {
             BigTile(symbol: "exclamationmark.triangle.fill", size: 96)
-            Text(app.t("missing.title")).font(.system(size: 28, weight: .heavy))
+            Text(app.t("missing.title")).font(.ui(28, .heavy))
             Text(app.t("missing.body")).foregroundStyle(Theme.secondary).multilineTextAlignment(.center).frame(maxWidth: 460)
-            Text("brew install mole").font(.system(size: 15, design: .monospaced))
+            Text("brew install mole").font(.mono(15))
                 .padding(.horizontal, 18).padding(.vertical, 10).glassCard(radius: 12)
                 .textSelection(.enabled)
             Button(app.t("missing.copy")) {
@@ -695,12 +699,12 @@ struct SpecTile: View {
         Button { link.open() } label: {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(title).font(.system(size: 12)).foregroundStyle(hover ? Theme.accent : Theme.text.opacity(0.62))
+                    Text(title).font(.ui(12)).foregroundStyle(hover ? Theme.accent : Theme.text.opacity(0.62))
                     Spacer()
-                    Image(systemName: "arrow.up.forward").font(.system(size: 10, weight: .bold))
+                    Image(systemName: "arrow.up.forward").font(.ui(10, .bold))
                         .foregroundStyle(Theme.accent).opacity(hover ? 1 : 0)
                 }
-                Text(value).font(.system(size: 16, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(value).font(.ui(16, .bold)).lineLimit(1).minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16).padding(.vertical, 14)

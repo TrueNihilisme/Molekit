@@ -2,6 +2,9 @@ import SwiftUI
 import AppKit
 import MoleKitCore
 
+/// Screens inside Tools.
+enum ToolScreen { case purge, uninstall, optimize, slim, installer }
+
 enum Tab: Int, CaseIterable, Identifiable {
     case clean, overview, tools, disk, status, history
     var id: Int { rawValue }
@@ -13,7 +16,7 @@ enum Tab: Int, CaseIterable, Identifiable {
 @MainActor
 final class AppModel: ObservableObject {
     @Published var tab: Tab = .clean
-    @Published var showPurge = false
+    @Published var toolScreen: ToolScreen?
     @Published var language: AppLanguage {
         didSet { UserDefaults.standard.set(language.rawValue, forKey: "language") }
     }
@@ -83,6 +86,8 @@ final class CleanModel: ObservableObject {
     init(cli: MoleCLI?) { self.cli = cli }
 
     var sections: [CleanPreview.Section] { preview?.nonEmptySections ?? [] }
+    /// Categories Mole checked and found nothing in.
+    var cleanSections: [CleanPreview.Section] { (preview?.sections ?? []).filter { $0.items.isEmpty } }
     var selectedSections: [CleanPreview.Section] { sections.filter { !deselected.contains($0.title) } }
     var selectedBytes: Int64 { selectedSections.reduce(0) { $0 + $1.bytes } }
     var allSelected: Bool { deselected.isEmpty }
@@ -372,25 +377,69 @@ final class PurgeModel: ObservableObject {
 
 // MARK: - Tools
 
+/// Previews for the interactive Mole tools. The final step of uninstall / slim / installer
+/// runs inside an in-app terminal, where Mole asks for its own confirmation.
 @MainActor
 final class ToolsModel: ObservableObject {
-    @Published var appCount: Int?
-    @Published var installerSummary: String?
-    private let cli: MoleCLI?
+    @Published var apps: [InstalledApp] = []
+    @Published var appsLoading = false
+    @Published var selectedApp: InstalledApp?
+    @Published var uninstallPreview: UninstallPreview?
+    @Published var previewLoading = false
+    @Published var slim: SlimPreview?
+    @Published var optimize: OptimizePreview?
+    @Published var installer: InstallerPreview?
+    @Published var loading: Set<String> = []
+    let cli: MoleCLI?
     init(cli: MoleCLI?) { self.cli = cli }
 
+    var appCount: Int? { apps.isEmpty ? nil : apps.count }
+
     func load() {
-        guard let cli else { return }
+        guard let cli, apps.isEmpty, !appsLoading else { return }
+        appsLoading = true
         Task {
             if let out = try? await cli.runChecked(["uninstall", "--list"]),
-               let apps = try? MoleJSON.decode([InstalledApp].self, from: out.stdout) {
-                appCount = apps.count
+               let list = try? MoleJSON.decode([InstalledApp].self, from: out.stdout) {
+                apps = list.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
             }
+            appsLoading = false
         }
     }
 
-    /// Interactive Mole commands (uninstall, optimize, installer, slim) run in Terminal,
-    /// where Mole shows its own selection and confirmation.
+    func select(_ app: InstalledApp) {
+        guard let cli else { return }
+        selectedApp = app
+        uninstallPreview = nil
+        previewLoading = true
+        Task {
+            let out = try? await cli.run(["uninstall", "--dry-run", app.uninstallName ?? app.name])
+            guard selectedApp == app else { return }
+            uninstallPreview = out.map { UninstallPreview.parse($0.stdout) }
+            previewLoading = false
+        }
+    }
+
+    func loadSlim(force: Bool = false) {
+        run("slim", ["slim", "--dry-run"], force: force || slim == nil) { self.slim = SlimPreview.parse($0) }
+    }
+    func loadOptimize(force: Bool = false) {
+        run("optimize", ["optimize", "--dry-run"], force: force || optimize == nil) { self.optimize = OptimizePreview.parse($0) }
+    }
+    func loadInstaller(force: Bool = false) {
+        run("installer", ["installer", "--dry-run"], force: force || installer == nil) { self.installer = InstallerPreview.parse($0) }
+    }
+
+    private func run(_ key: String, _ args: [String], force: Bool, apply: @escaping (String) -> Void) {
+        guard let cli, force, !loading.contains(key) else { return }
+        loading.insert(key)
+        Task {
+            if let out = try? await cli.run(args) { apply(out.stdout) }
+            loading.remove(key)
+        }
+    }
+
+    /// Used when an update fails.
     func openInTerminal(_ command: String) {
         let script = "tell application \"Terminal\"\nactivate\ndo script \"\(command)\"\nend tell"
         NSAppleScript(source: script)?.executeAndReturnError(nil)

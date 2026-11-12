@@ -16,6 +16,36 @@
 "update.offline" = "Не вдалося перевірити · %@";
 "update.script" = "встановлено скриптом";
 "link.storage" = "Відкрити налаштування сховища";
+"term.close" = "Закрити";
+"term.hint" = "mo працює. Відповідай на його питання тут.";
+"term.done" = "Завершено";
+"term.ended" = "Зупинено";
+"tools.steps" = "Перевірок: %ld";
+"tools.nothing" = "Нічого не знайдено";
+"tools.files" = "Файлів: %ld";
+"uninstall.subtitle" = "Обери програму: побачиш, що видалиться, а що лишиться.";
+"uninstall.search" = "Пошук програми";
+"uninstall.selected" = "Обрано: %@";
+"uninstall.pick" = "Обери програму зліва";
+"uninstall.run" = "Видалити…";
+"uninstall.willRemove" = "Буде видалено";
+"uninstall.keeps" = "Особисті дані лишаться";
+"uninstall.keepsHint" = "Mole їх не чіпає, якщо не обереш їх у його підтвердженні (D).";
+"uninstall.pickHint" = "Обери програму, щоб побачити, що видалиться.";
+"optimize.subtitle" = "Що mo optimize перевірить і оновить.";
+"optimize.prompt" = "Mole перевірить кеші, служби й налаштування. Під час перегляду нічого не змінюється.";
+"optimize.summary" = "Кроків: %ld";
+"optimize.run" = "Оптимізувати…";
+"slim.subtitle" = "Універсальні програми містять код для Intel, який твій Мак не використовує. Оновлення повертають його.";
+"slim.prompt" = "Знайти програми з кодом для Intel. Під час перегляду нічого не змінюється.";
+"slim.summary" = "Програм: %ld · коду для Intel %@";
+"slim.run" = "Зменшити…";
+"installer.subtitle" = "Забуті інсталятори .dmg, .pkg, .iso, .xip і .zip.";
+"installer.prompt" = "Пошукати непотрібні файли-інсталятори.";
+"installer.none" = "Інсталяторів не знайдено";
+"installer.run" = "Прибрати…";
+"purge.prompt" = "Знайти результати збірки в проєктах. Під час пошуку нічого не видаляється.";
+"overview.healthHint" = "Оцінка Mole: починає зі 100 і знімає бали за навантаження процесора й пам'яті, майже повний диск, температуру і знос батареї.";
 "disk.freeOf" = "Вільно %@ з %@";
 
 /* Очищення */
@@ -53,6 +83,7 @@
 "clean.details" = "Деталі";
 "clean.moreFolders" = "%@ і ще %ld";
 "clean.row.cleaning" = "чищу…";
+"clean.row.clean" = "Чисто";
 "clean.row.skipped" = "пропущено";
 
 /* Розділи Mole */

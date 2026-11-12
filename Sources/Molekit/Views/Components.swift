@@ -54,8 +54,8 @@ struct SidebarView: View {
             HStack(spacing: 12) {
                 MoleLogo()
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Molekit").font(.system(size: 17, weight: .bold))
-                    Text("System Cleaner").font(.system(size: 12)).foregroundStyle(Theme.secondary)
+                    Text("Molekit").font(.ui(17, .bold))
+                    Text("System Cleaner").font(.ui(12)).foregroundStyle(Theme.secondary)
                 }
             }
             .padding(.horizontal, 6).padding(.bottom, 22)
@@ -78,7 +78,7 @@ struct SidebarView: View {
     private func navButton(_ tab: Tab) -> some View {
         NavItem(title: app.t(tab.key), symbol: tab.symbol, on: app.tab == tab) {
             app.tab = tab
-            app.showPurge = false
+            app.toolScreen = nil
         }
     }
 
@@ -100,30 +100,30 @@ struct VersionCard: View {
     @ObservedObject var model: UpdateModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Circle().fill(dotColor).frame(width: 8, height: 8).shadow(color: dotColor, radius: 4)
+        HStack(alignment: .top, spacing: 10) {
+            Circle().fill(dotColor).frame(width: 8, height: 8).shadow(color: dotColor, radius: 4)
+                .padding(.top, 5)
+            VStack(alignment: .leading, spacing: 6) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(app.t("sidebar.version", model.installed ?? "—")).font(.system(size: 12, weight: .semibold))
-                    Text(status).font(.system(size: 11)).foregroundStyle(Theme.secondary).lineLimit(2)
+                    Text(app.t("sidebar.version", model.installed ?? "—")).font(.ui(12, .semibold))
+                    Text(status).font(.ui(11)).foregroundStyle(Theme.secondary).lineLimit(2)
                 }
-                Spacer(minLength: 0)
-                if model.state == .checking || model.state == .updating { ProgressView().controlSize(.small) }
+                switch model.state {
+                case .available:
+                    Button(app.t("update.button")) { model.update() }
+                        .buttonStyle(PrimaryButtonStyle(large: false))
+                case .failed:
+                    Button(app.t("tools.openTerminal")) { app.tools.openInTerminal("mo update") }
+                        .buttonStyle(GhostButtonStyle())
+                case .upToDate, .offline:
+                    Button(app.t("update.check")) { model.check() }
+                        .buttonStyle(.plain).font(.ui(11, .semibold)).foregroundStyle(Theme.accent)
+                default:
+                    EmptyView()
+                }
             }
-            switch model.state {
-            case .available:
-                Button(app.t("update.button")) { model.update() }
-                    .buttonStyle(PrimaryButtonStyle(large: false))
-                    .frame(maxWidth: .infinity)
-            case .failed:
-                Button(app.t("tools.openTerminal")) { app.tools.openInTerminal("mo update") }
-                    .buttonStyle(GhostButtonStyle())
-            case .upToDate, .offline:
-                Button(app.t("update.check")) { model.check() }
-                    .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accent)
-            default:
-                EmptyView()
-            }
+            Spacer(minLength: 0)
+            if model.state == .checking || model.state == .updating { ProgressView().controlSize(.small) }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         .glassCard(radius: 12, highlighted: highlight)
@@ -166,10 +166,10 @@ struct NavItem: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 14) {
-                Image(systemName: symbol).font(.system(size: 16, weight: .semibold)).frame(width: 22)
+                Image(systemName: symbol).font(.ui(16, .semibold)).frame(width: 22)
                     .foregroundStyle(on ? Theme.ink : (hover ? Theme.accent : Color(hex: 0x7EA6D8)))
                     .shadow(color: hover && !on ? Theme.accent.opacity(0.6) : .clear, radius: 5)
-                Text(title).font(.system(size: 15, weight: on ? .bold : .medium))
+                Text(title).font(.ui(15, on ? .bold : .medium))
                     .foregroundStyle(on ? Theme.ink : (hover ? Theme.accent : Theme.text.opacity(0.86)))
                 Spacer()
             }
@@ -213,7 +213,7 @@ struct LangButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 12, weight: .bold))
+                .font(.ui(12, .bold))
                 .foregroundStyle(on ? Theme.accent : Theme.text.opacity(0.6))
                 .shadow(color: on ? Theme.accent.opacity(0.5) : .clear, radius: 5)
                 .frame(maxWidth: .infinity)
@@ -290,7 +290,7 @@ struct DiskBar: View {
             Image(systemName: "internaldrive.fill").foregroundStyle(Color(hex: 0x7EA6D8))
             if let space {
                 Text(app.t("disk.freeOf", app.size(space.free), app.size(space.total)))
-                    .font(.system(size: 13)).foregroundStyle(Theme.text.opacity(0.88)).lineLimit(1)
+                    .font(.ui(13)).foregroundStyle(Theme.text.opacity(0.88)).lineLimit(1)
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule().fill(.black.opacity(0.35))
@@ -319,9 +319,9 @@ struct PageHeader<Trailing: View>: View {
     var body: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(title).font(.system(size: 34, weight: .heavy)).tracking(-0.6)
+                Text(title).font(.ui(34, .heavy)).tracking(-0.6)
                     .shadow(color: .black.opacity(0.35), radius: 8, y: 2)
-                Text(subtitle).font(.system(size: 14)).foregroundStyle(Theme.secondary)
+                Text(subtitle).font(.ui(14)).foregroundStyle(Theme.secondary)
             }
             Spacer()
             trailing

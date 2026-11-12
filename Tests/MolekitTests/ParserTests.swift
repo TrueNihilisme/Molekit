@@ -135,3 +135,55 @@ final class UpdateTests: XCTestCase {
         XCTAssertNotNil(v)
     }
 }
+
+final class ToolParserTests: XCTestCase {
+    func testUninstall() {
+        let out = """
+        ○ DRY RUN MODE, No app files or settings will be modified
+        Files to be removed:
+        ◎ Example , 166.1MB
+          ✓ /Applications/Example.app , 166.1MB
+        Personal data kept:
+          ⊙ ~/Library/Preferences/com.example.plist
+        D choose personal data
+        """
+        let p = UninstallPreview.parse(out)
+        XCTAssertEqual(p.remove.map(\.path), ["/Applications/Example.app"])
+        XCTAssertEqual(p.totalBytes, 166_100_000)
+        XCTAssertEqual(p.keep, ["~/Library/Preferences/com.example.plist"])
+    }
+
+    func testSlim() {
+        let out = """
+        ○ DRY RUN MODE, No apps will be changed
+          Google Chrome               581.5MB
+          Claude Status Bar             513KB
+        2 apps, 582.0MB of Intel code
+        """
+        let p = SlimPreview.parse(out)
+        XCTAssertEqual(p.apps.map(\.name), ["Google Chrome", "Claude Status Bar"])
+        XCTAssertEqual(p.apps[1].bytes, 513_000)
+        XCTAssertEqual(p.reportedTotal, 582_000_000)
+    }
+
+    func testOptimize() {
+        let out = """
+        Performance diagnosis
+          ◎ Likely bottleneck: WindowServer
+        ➤ Finder Cache Refresh
+          ○ QuickLook thumbnails refreshed
+          ○ Icon services cache rebuilt
+        ➤ Database Optimization
+          ◎ Close these apps before database optimization: Safari
+        """
+        let p = OptimizePreview.parse(out)
+        XCTAssertEqual(p.steps.count, 2)
+        XCTAssertEqual(p.steps[0].lines.count, 2)
+        XCTAssertFalse(p.steps[0].needsAttention)
+        XCTAssertTrue(p.steps[1].needsAttention)
+    }
+
+    func testInstallerEmpty() {
+        XCTAssertTrue(InstallerPreview.parse("✓ No installer files to clean").nothingFound)
+    }
+}

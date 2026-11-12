@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreText
 
 /// Visual language from the approved mockup:
 /// cyan = action/value, green = live/done, red = stop/danger. Light comes from above:
@@ -98,7 +99,7 @@ struct GlyphTile: View {
             )
             .overlay(
                 Image(systemName: symbol)
-                    .font(.system(size: size * 0.46, weight: .semibold))
+                    .font(.ui(size * 0.46, .semibold))
                     .foregroundStyle(tint)
                     .shadow(color: tint.opacity(0.55), radius: size * 0.12)
             )
@@ -123,7 +124,7 @@ struct GreenCheckbox: View {
                 )
                 .overlay(
                     Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .heavy))
+                        .font(.ui(12, .heavy))
                         .foregroundStyle(Theme.greenInk)
                         .opacity(isOn ? 1 : 0)
                 )
@@ -146,7 +147,7 @@ struct StatusMark: View {
             switch kind {
             case .done:
                 Circle().fill(Theme.greenGradient)
-                Image(systemName: "checkmark").font(.system(size: 11, weight: .heavy)).foregroundStyle(Theme.greenInk)
+                Image(systemName: "checkmark").font(.ui(11, .heavy)).foregroundStyle(Theme.greenInk)
             case .busy:
                 Circle().fill(Theme.green.opacity(0.16))
                 Circle().strokeBorder(Theme.green, lineWidth: 2)
@@ -155,7 +156,7 @@ struct StatusMark: View {
                 Circle().strokeBorder(.white.opacity(0.22), lineWidth: 1.5)
             case .skipped:
                 Circle().fill(.white.opacity(0.06))
-                Image(systemName: "minus").font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.tertiary)
+                Image(systemName: "minus").font(.ui(10, .bold)).foregroundStyle(Theme.tertiary)
             }
         }
         .frame(width: 24, height: 24)
@@ -171,7 +172,7 @@ struct LiveChip: View {
     var body: some View {
         HStack(spacing: 8) {
             Circle().fill(color).frame(width: 8, height: 8).shadow(color: color, radius: 5)
-            Text(text).font(.system(size: 13, weight: .semibold)).foregroundStyle(color)
+            Text(text).font(.ui(13, .semibold)).foregroundStyle(color)
         }
         .padding(.horizontal, 14).padding(.vertical, 6)
         .background(Capsule().fill(color.opacity(0.10)))
@@ -186,7 +187,7 @@ struct PrimaryButtonStyle: ButtonStyle {
     var large = true
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: large ? 18 : 14, weight: .bold))
+            .font(.ui(large ? 18 : 14, .bold))
             .foregroundStyle(Theme.ink)
             .padding(.horizontal, large ? 40 : 20)
             .frame(height: large ? 58 : 40)
@@ -204,7 +205,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct GhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 13, weight: .semibold))
+            .font(.ui(13, .semibold))
             .foregroundStyle(Theme.text)
             .padding(.horizontal, 18)
             .frame(height: 38)
@@ -220,7 +221,7 @@ struct StopButtonStyle: ButtonStyle {
     @State private var hover = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 18, weight: .bold))
+            .font(.ui(18, .bold))
             .foregroundStyle(hover ? Color.white : Theme.text)
             .padding(.horizontal, 40)
             .frame(height: 58)
@@ -233,5 +234,25 @@ struct StopButtonStyle: ButtonStyle {
             .shadow(color: hover ? Theme.red.opacity(0.45) : .black.opacity(0.35), radius: 15, y: 8)
             .onHover { hover = $0 }
             .animation(.easeOut(duration: 0.15), value: hover)
+    }
+}
+
+// MARK: - Type
+
+extension Font {
+    /// Inter (bundled, SIL OFL 1.1) for all interface text, as in the design.
+    static func ui(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        .custom("Inter Variable", size: size).weight(weight)
+    }
+    static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        .system(size: size, weight: weight, design: .monospaced)
+    }
+}
+
+enum Fonts {
+    /// Registers the bundled Inter for this process only.
+    static func register() {
+        guard let url = Bundle.module.url(forResource: "InterVariable", withExtension: "ttf") else { return }
+        CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
     }
 }

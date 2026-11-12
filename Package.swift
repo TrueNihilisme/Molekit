@@ -7,6 +7,10 @@ let package = Package(
     name: "Molekit",
     defaultLocalization: "en",
     platforms: [.macOS(.v14)],
+    dependencies: [
+        // Terminal view for the steps where Mole itself asks for confirmation (uninstall, slim, installer).
+        .package(url: "https://github.com/migueldeicaza/SwiftTerm", exact: "1.99.2")
+    ],
     targets: [
         // All logic that talks to `mo` and parses its output. No UI, so it is unit-testable.
         .target(
@@ -16,7 +20,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "Molekit",
-            dependencies: ["MoleKitCore"],
+            dependencies: ["MoleKitCore", .product(name: "SwiftTerm", package: "SwiftTerm")],
             path: "Sources/Molekit",
             resources: [.process("Resources")],
             swiftSettings: [.swiftLanguageMode(.v5)]
