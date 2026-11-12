@@ -25,6 +25,9 @@ struct CleanView: View {
             }
             .padding(.top, 8)
             Spacer(minLength: 12)
+            if model.phase == .idle {
+                IdleRing()
+            } else {
             ZStack {
                 ProgressRing(progress: ringProgress)
                     .animation(.spring(response: 0.5, dampingFraction: 0.8), value: ringProgress)
@@ -43,6 +46,7 @@ struct CleanView: View {
                     Text(ringUnit).font(.ui(18, .bold)).foregroundStyle(Theme.text.opacity(0.9)).padding(.top, 6)
                     Text(ringLabel).font(.ui(14)).foregroundStyle(Theme.text.opacity(0.6))
                 }
+            }
             }
             Spacer(minLength: 12)
             VStack(spacing: 18) {
@@ -79,7 +83,15 @@ struct CleanView: View {
 
     // MARK: right column
 
-    private var list: some View {
+    @ViewBuilder private var list: some View {
+        if model.phase == .idle && model.preview == nil {
+            WelcomePanel()
+        } else {
+            resultList
+        }
+    }
+
+    private var resultList: some View {
         VStack(spacing: 8) {
             HStack(spacing: 14) {
                 if model.phase == .found {
