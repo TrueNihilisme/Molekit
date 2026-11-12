@@ -15,7 +15,10 @@ struct OverviewView: View {
             PageHeader(title: app.t("nav.overview"), subtitle: "Small mole. Big cleanup.")
             HStack(alignment: .top, spacing: 14) {
                 healthCard.frame(width: 300)
-                macCard
+                VStack(spacing: 16) {
+                    macCard
+                    TipsTicker()
+                }
             }
             .fixedSize(horizontal: false, vertical: true)
             Text(app.t("overview.actions")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
@@ -56,10 +59,8 @@ struct OverviewView: View {
                 }
             }
             Text(healthWord).font(.ui(16, .bold)).foregroundStyle(Theme.accent)
-            Text(app.t("overview.healthHint")).font(.ui(12)).foregroundStyle(Theme.tertiary)
-                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
         }
-        .padding(22).frame(maxHeight: .infinity, alignment: .top).glassCard(radius: 18)
+        .padding(22).frame(maxHeight: .infinity).glassCard(radius: 18)
     }
 
     private var healthWord: String {
@@ -714,5 +715,48 @@ struct SpecTile: View {
         .buttonStyle(.plain)
         .onHover { hover = $0 }
         .animation(.easeOut(duration: 0.15), value: hover)
+    }
+}
+
+// MARK: - Rotating tips
+
+/// Cyan tips under "This Mac", one every 10 seconds.
+struct TipsTicker: View {
+    @EnvironmentObject var app: AppModel
+    @State private var index = 0
+    private let count = 7
+    private let timer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ZStack(alignment: .leading) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Image(systemName: index == 0 ? "gauge.with.dots.needle.67percent" : "lightbulb.max")
+                        .font(.ui(15, .semibold))
+                    (Text(app.t(index == 0 ? "tips.label.score" : "tips.label")).fontWeight(.bold) + Text("  " + app.t("tip.\(index)")))
+                        .font(.ui(15))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .foregroundStyle(Theme.accent)
+                .shadow(color: Theme.accent.opacity(0.35), radius: 8)
+                .id(index)
+                .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity),
+                                        removal: .move(edge: .top).combined(with: .opacity)))
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .clipped()
+            HStack(spacing: 6) {
+                ForEach(0..<count, id: \.self) { i in
+                    Capsule().fill(i == index ? Theme.accent : .white.opacity(0.18))
+                        .frame(width: i == index ? 18 : 6, height: 6)
+                        .onTapGesture { withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) { index = i } }
+                }
+            }
+        }
+        .padding(.horizontal, 6)
+        .frame(maxHeight: .infinity, alignment: .center)
+        .onReceive(timer) { _ in
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.85)) { index = (index + 1) % count }
+        }
     }
 }
