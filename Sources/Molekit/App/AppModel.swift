@@ -77,6 +77,15 @@ final class CleanModel: ObservableObject {
     @Published var result: RunSummary?
     @Published var expanded: Set<String> = []
     @Published var sectionsSeen = 0
+    /// Categories as `mo clean --dry-run` prints them, filled in live while scanning.
+    @Published var live: [LiveSection] = []
+    struct LiveSection: Identifiable, Equatable {
+        let title: String
+        var bytes: Int64 = 0
+        var finds = 0
+        var id: String { title }
+    }
+    var liveTotal: Int64 { live.reduce(0) { $0 + $1.bytes } }
 
     private let cli: MoleCLI?
     private var task: Task<Void, Never>?
@@ -104,7 +113,7 @@ final class CleanModel: ObservableObject {
     /// `mo clean --dry-run`, then read the detailed list Mole writes.
     func scan() {
         guard let cli, !isBusy else { return }
-        phase = .scanning; progress = 0; sectionsSeen = 0; currentSection = ""; result = nil
+        phase = .scanning; progress = 0; sectionsSeen = 0; currentSection = ""; result = nil; live = []
         task = Task {
             do {
                 for try await line in cli.lines(["clean", "--dry-run"]) {
@@ -170,9 +179,20 @@ final class CleanModel: ObservableObject {
 
     private func handleProgress(_ line: String) {
         let trimmed = line.trimmingCharacters(in: .whitespaces)
+        if phase == .scanning, trimmed.hasPrefix("○") || trimmed.hasPrefix("◎"), !live.isEmpty,
+           let bytes = LiveLine.size(trimmed) {
+            withAnimation(.easeOut(duration: 0.25)) {
+                live[live.count - 1].bytes += bytes
+                live[live.count - 1].finds += 1
+            }
+            return
+        }
         guard trimmed.hasPrefix("➤") else { return }
         sectionsSeen += 1
         currentSection = String(trimmed.dropFirst()).trimmingCharacters(in: .whitespaces)
+        if phase == .scanning {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { live.append(LiveSection(title: currentSection)) }
+        }
         withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
             progress = min(0.97, Double(sectionsSeen) / Double(expectedSections))
         }
@@ -480,5 +500,16 @@ final class UpdateModel: ObservableObject {
             let out = try? await cli.run(["update"])
             if out?.status == 0 { check() } else { state = .failed }
         }
+    }
+}
+
+/// Reads the size from a live `mo clean --dry-run` line such as
+/// "○ Firefox cache · 843.6MB dry" or "○ Chrome Service Worker, would clean 215.1MB, 0 protected".
+enum LiveLine {
+    static func size(_ line: String) -> Int64? {
+        guard let re = try? NSRegularExpression(pattern: #"([0-9]+(?:\.[0-9]+)?\s*(?:B|KB|MB|GB|TB))(?=\s+dry|,|\s*$)"#),
+              let m = re.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
+              let r = Range(m.range(at: 1), in: line) else { return nil }
+        return ByteSize.parse(String(line[r]))
     }
 }

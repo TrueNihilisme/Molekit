@@ -96,6 +96,7 @@
 "clean.moreFolders" = "%@ і ще %ld";
 "clean.row.cleaning" = "чищу…";
 "clean.row.clean" = "Чисто";
+"clean.live.finds" = "Знахідок: %ld";
 "clean.row.skipped" = "пропущено";
 
 /* Розділи Mole */

@@ -109,7 +109,9 @@ struct CleanView: View {
 
             ScrollView {
                 LazyVStack(spacing: 6) {
-                    if model.sections.isEmpty {
+                    if model.phase == .scanning {
+                        liveRows
+                    } else if model.sections.isEmpty {
                         placeholderRows
                     } else {
                         ForEach(Array(model.sections.enumerated()), id: \.element.id) { index, section in
@@ -135,6 +137,30 @@ struct CleanView: View {
                 .padding(.bottom, 4)
             }
             .scrollIndicators(.never)
+        }
+    }
+
+    /// While scanning: categories appear as Mole reaches them, sizes grow live.
+    private var liveRows: some View {
+        ForEach(Array(model.live.enumerated()), id: \.element.id) { i, section in
+            let current = i == model.live.count - 1
+            HStack(spacing: 12) {
+                StatusMark(kind: current ? .busy : .done)
+                GlyphTile(symbol: SectionStyle.symbol(for: section.title), dimmed: !current && section.bytes == 0)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(SectionStyle.name(section.title, app: app)).font(.ui(14, .semibold)).lineLimit(1)
+                    Text(current ? app.t("clean.scanningShort") : (section.finds == 0 ? app.t("clean.row.clean") : app.t("clean.live.finds", section.finds)))
+                        .font(.ui(12)).foregroundStyle(Theme.text.opacity(0.6))
+                }
+                Spacer()
+                Text(section.bytes > 0 ? app.size(section.bytes) : (current ? "…" : "—"))
+                    .font(.ui(14, .bold)).monospacedDigit()
+                    .foregroundStyle(section.bytes > 0 ? Theme.text : Theme.tertiary)
+                    .contentTransition(.numericText())
+            }
+            .padding(.leading, 16).padding(.trailing, 16).frame(height: 58)
+            .glassCard(highlighted: current ? Theme.green : nil)
+            .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
 
@@ -253,6 +279,7 @@ struct CleanView: View {
     private var listTotal: Int64 {
         switch model.phase {
         case .done: return model.result?.bytes ?? model.selectedBytes
+        case .scanning: return model.liveTotal
         default: return model.phase == .found ? model.selectedBytes : (model.preview?.total ?? 0)
         }
     }

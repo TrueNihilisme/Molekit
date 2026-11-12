@@ -96,6 +96,7 @@
 "clean.moreFolders" = "%@ and %ld more";
 "clean.row.cleaning" = "cleaning…";
 "clean.row.clean" = "Clean";
+"clean.live.finds" = "%ld finds";
 "clean.row.skipped" = "skipped";
 
 /* Overview */
