@@ -571,7 +571,8 @@ struct HistoryView: View {
             HStack(spacing: 14) {
                 stat("sparkles", app.t("history.freedToday"), app.size(freed), Theme.accent)
                 stat("clock", app.t("history.runsToday"), "\(today.count)", Theme.accent)
-                stat("checkmark.shield.fill", app.t("history.errors"), "\(failed)", failed == 0 ? Theme.green : Theme.red)
+                stat(failed == 0 ? "checkmark.shield.fill" : "xmark.shield.fill", app.t("history.errors"), "\(failed)", failed == 0 ? Theme.green : Theme.red,
+                     alert: failed > 0)
             }
             Text(app.t("history.recent")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
             ScrollView {
@@ -588,7 +589,7 @@ struct HistoryView: View {
         .onAppear { model.load() }
     }
 
-    private func stat(_ symbol: String, _ title: String, _ value: String, _ color: Color) -> some View {
+    private func stat(_ symbol: String, _ title: String, _ value: String, _ color: Color, alert: Bool = false) -> some View {
         HStack(spacing: 16) {
             GlyphTile(symbol: symbol, size: 64, tint: color)
             VStack(alignment: .leading, spacing: 2) {
@@ -598,10 +599,44 @@ struct HistoryView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 18).padding(.vertical, 16).glassCard(radius: 22)
+        .padding(.horizontal, 18).padding(.vertical, 16).glassCard(radius: 22, highlighted: alert ? Theme.red : nil)
     }
 
     private func row(_ s: HistoryResult.Session) -> some View {
+        let errors = (s.failedTasks ?? 0) + (s.actions?.failed ?? 0)
+        if errors > 0 { return AnyView(errorRow(s, errors: errors)) }
+        return AnyView(normalRow(s))
+    }
+
+    private func errorRow(_ s: HistoryResult.Session, errors: Int) -> some View {
+        let date = HistoryModel.date(s.startedAt)
+        return HStack(spacing: 14) {
+            Text(date.map { $0.formatted(date: Calendar.current.isDateInToday($0) ? .omitted : .abbreviated, time: .shortened) } ?? "—")
+                .font(.ui(13, .semibold)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.78))
+                .frame(width: 110, alignment: .leading)
+            GlyphTile(symbol: symbol(s.baseCommand), tint: Theme.red)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(name(s.baseCommand)).font(.ui(14, .semibold))
+                Text(app.t("history.seeLog")).font(.ui(12)).foregroundStyle(Theme.text.opacity(0.6))
+            }
+            Spacer()
+            HStack(spacing: 6) {
+                Image(systemName: "xmark").font(.ui(10, .heavy))
+                Text(app.t("history.failed", errors))
+            }
+            .font(.ui(12, .bold)).foregroundStyle(.white)
+            .padding(.horizontal, 12).padding(.vertical, 5)
+            .background(Capsule().fill(LinearGradient(colors: [Color(hex: 0xFF7676), Color(hex: 0xD9363F)], startPoint: .top, endPoint: .bottom)))
+            .shadow(color: Theme.red.opacity(0.4), radius: 6)
+            Text(s.sizeBytes > 0 ? app.size(s.sizeBytes) : "—").font(.ui(15, .bold)).monospacedDigit()
+                .foregroundStyle(Theme.red).frame(width: 92, alignment: .trailing)
+        }
+        .padding(.horizontal, 18).frame(height: 62)
+        .glassCard(highlighted: Theme.red)
+        .contextMenu { RevealButton(path: NSHomeDirectory() + "/Library/Logs/mole/operations.log") }
+    }
+
+    private func normalRow(_ s: HistoryResult.Session) -> some View {
         let done = !s.isPreview
         let date = HistoryModel.date(s.startedAt)
         return HStack(spacing: 14) {

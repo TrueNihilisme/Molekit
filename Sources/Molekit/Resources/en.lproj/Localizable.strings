@@ -189,6 +189,8 @@
 "history.empty" = "No runs yet.";
 "history.itemsRemoved" = "%ld items removed";
 "history.itemsFound" = "%ld items found";
+"history.failed" = "Errors: %ld";
+"history.seeLog" = "Right-click to open the log";
 "history.done" = "Done";
 "history.preview" = "Preview";
 "history.cmd.clean" = "Clean";
