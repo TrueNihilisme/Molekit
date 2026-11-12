@@ -96,8 +96,16 @@
 "purge.rebuilds" = "Rebuilt automatically";
 
 /* Disk */
+"disk.back" = "Back";
+"disk.inFolder" = "%@ in %ld items";
+"disk.free" = "free";
+"disk.usedOf" = "%@ used of %@";
+"disk.bigFiles" = "Largest files here";
+"disk.rightClick" = "Right-click a row: Show in Finder";
+"disk.reveal" = "Show in Finder";
+"disk.openHere" = "Open";
 "disk.title" = "What takes up space";
-"disk.subtitle" = "Burrowing through your disk, one folder at a time. Click a block to dig in.";
+"disk.subtitle" = "Biggest first. Click a folder to go inside.";
 "disk.loading" = "mo analyze is measuring your disk…";
 
 /* Status */

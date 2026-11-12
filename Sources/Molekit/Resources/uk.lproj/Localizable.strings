@@ -58,6 +58,7 @@
 "section.Apple Silicon updates" = "Оновлення Apple Silicon";
 "section.Device backups & firmware" = "Резервні копії й прошивки";
 "section.Time Machine" = "Time Machine";
+"section.Apps & utilities" = "Програми й утиліти";
 "section.Large files" = "Великі файли";
 "section.System Data clues" = "Системні дані";
 "section.Project artifacts" = "Збірки проєктів";
@@ -113,8 +114,16 @@
 "purge.rebuilds" = "Збереться знову автоматично";
 
 /* Диск */
+"disk.back" = "Назад";
+"disk.inFolder" = "%@ у %ld елементах";
+"disk.free" = "вільно";
+"disk.usedOf" = "Зайнято %@ з %@";
+"disk.bigFiles" = "Великі файли тут";
+"disk.rightClick" = "Права кнопка на рядку: «Показати у Finder»";
+"disk.reveal" = "Показати у Finder";
+"disk.openHere" = "Відкрити";
 "disk.title" = "Що займає місце";
-"disk.subtitle" = "Риємо диск теку за текою. Натисни на блок, щоб зазирнути глибше.";
+"disk.subtitle" = "Від найбільшого до найменшого. Натисни на теку, щоб зайти всередину.";
 "disk.loading" = "mo analyze міряє диск…";
 
 /* Стан */

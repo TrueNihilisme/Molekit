@@ -93,30 +93,10 @@ struct SidebarView: View {
     }
 
     private func navButton(_ tab: Tab) -> some View {
-        let on = app.tab == tab
-        return Button {
+        NavItem(title: app.t(tab.key), symbol: tab.symbol, on: app.tab == tab) {
             app.tab = tab
             app.showPurge = false
-        } label: {
-            HStack(spacing: 14) {
-                Image(systemName: tab.symbol).font(.system(size: 16, weight: .semibold)).frame(width: 22)
-                    .foregroundStyle(on ? Theme.ink : Color(hex: 0x7EA6D8))
-                Text(app.t(tab.key)).font(.system(size: 15, weight: on ? .bold : .medium))
-                    .foregroundStyle(on ? Theme.ink : Theme.text.opacity(0.86))
-                Spacer()
-            }
-            .padding(.horizontal, 14).frame(height: 46)
-            .background {
-                if on {
-                    RoundedRectangle(cornerRadius: 13, style: .continuous)
-                        .fill(LinearGradient(colors: [Color(hex: 0x6AE9FF), Color(hex: 0x22B6F0)], startPoint: .top, endPoint: .bottom))
-                        .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(.white.opacity(0.35), lineWidth: 1))
-                        .shadow(color: Theme.accent.opacity(0.32), radius: 11, y: 8)
-                }
-            }
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
     }
 
     private var languageToggle: some View {
@@ -128,6 +108,56 @@ struct SidebarView: View {
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.black.opacity(0.22)))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.white.opacity(0.07), lineWidth: 1))
         .padding(.top, 4).padding(.bottom, 8)
+    }
+}
+
+/// Sidebar item. Active: solid cyan. Others: neutral glass (like the Stop button)
+/// that fades to cyan glass on hover.
+struct NavItem: View {
+    let title: String
+    let symbol: String
+    let on: Bool
+    let action: () -> Void
+    @State private var hover = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: symbol).font(.system(size: 16, weight: .semibold)).frame(width: 22)
+                    .foregroundStyle(on ? Theme.ink : (hover ? Theme.accent : Color(hex: 0x7EA6D8)))
+                    .shadow(color: hover && !on ? Theme.accent.opacity(0.6) : .clear, radius: 5)
+                Text(title).font(.system(size: 15, weight: on ? .bold : .medium))
+                    .foregroundStyle(on ? Theme.ink : (hover ? Theme.accent : Theme.text.opacity(0.86)))
+                Spacer()
+            }
+            .padding(.horizontal, 14).frame(height: 46)
+            .background(background)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .animation(.easeOut(duration: 0.18), value: hover)
+        .animation(.easeOut(duration: 0.18), value: on)
+    }
+
+    private var background: some View {
+        let shape = RoundedRectangle(cornerRadius: 13, style: .continuous)
+        let fill: LinearGradient
+        let border: Color
+        if on {
+            fill = LinearGradient(colors: [Color(hex: 0x6AE9FF), Color(hex: 0x22B6F0)], startPoint: .top, endPoint: .bottom)
+            border = .white.opacity(0.35)
+        } else if hover {
+            fill = LinearGradient(colors: [Theme.accent.opacity(0.24), Theme.accent.opacity(0.10)], startPoint: .top, endPoint: .bottom)
+            border = Theme.accent.opacity(0.45)
+        } else {
+            fill = LinearGradient(colors: [.white.opacity(0.07), .white.opacity(0.025)], startPoint: .top, endPoint: .bottom)
+            border = .white.opacity(0.08)
+        }
+        return shape.fill(fill)
+            .overlay(shape.strokeBorder(border, lineWidth: 1))
+            .overlay(shape.strokeBorder(LinearGradient(colors: [.white.opacity(on ? 0 : 0.08), .clear], startPoint: .top, endPoint: .center), lineWidth: 1))
+            .shadow(color: on ? Theme.accent.opacity(0.32) : (hover ? Theme.accent.opacity(0.22) : .black.opacity(0.25)), radius: on ? 11 : 8, y: on ? 8 : 4)
     }
 }
 
@@ -169,8 +199,6 @@ struct ProgressRing: View {
 
     var body: some View {
         ZStack {
-            Circle().fill(RadialGradient(colors: [Theme.accent.opacity(0.22), .clear], center: .center, startRadius: size * 0.3, endRadius: size * 0.62))
-                .frame(width: size + 36, height: size + 36)
             Circle().stroke(.white.opacity(0.06), lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: max(0.001, progress))
@@ -181,11 +209,11 @@ struct ProgressRing: View {
                 .shadow(color: Theme.accent.opacity(0.35), radius: 14)
             Circle()
                 .fill(RadialGradient(colors: [Color(hex: 0x1D2A42), Color(hex: 0x0E1626)], center: UnitPoint(x: 0.5, y: 0.3), startRadius: 0, endRadius: size * 0.42))
-                .padding(lineWidth)
+                .padding(lineWidth / 2)
                 .overlay(
                     Circle()
                         .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.08), Color.clear], startPoint: .top, endPoint: .center), lineWidth: 1)
-                        .padding(lineWidth)
+                        .padding(lineWidth / 2)
                 )
             // glowing head at the end of the arc
             if progress > 0.005 {
@@ -197,7 +225,13 @@ struct ProgressRing: View {
                     .rotationEffect(.degrees(360 * progress))
             }
         }
+        // the stroke is centred on the circle's edge, so the head sits exactly on it
+        .padding(lineWidth / 2)
         .frame(width: size, height: size)
+        .background(
+            Circle().fill(RadialGradient(colors: [Theme.accent.opacity(0.22), .clear], center: .center, startRadius: size * 0.3, endRadius: size * 0.62))
+                .frame(width: size + 36, height: size + 36)
+        )
     }
 }
 

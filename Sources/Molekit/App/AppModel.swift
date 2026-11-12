@@ -247,15 +247,17 @@ final class HistoryModel: ObservableObject {
 
 // MARK: - Disk
 
+/// One level of `mo analyze --json [path]`: folders sorted by size, plus the biggest files.
 @MainActor
 final class DiskModel: ObservableObject {
-    struct Node: Identifiable {
-        let entry: AnalyzeResult.Entry
-        var children: [AnalyzeResult.Entry]?
-        var id: String { entry.path }
+    struct Level {
+        let path: String?            // nil = machine-wide overview
+        let title: String
+        var entries: [AnalyzeResult.Entry]
+        var largeFiles: [AnalyzeResult.LargeFile]
+        var total: Int64 { entries.reduce(0) { $0 + $1.size } }
     }
-    @Published var path: String?          // nil = machine-wide overview
-    @Published var nodes: [Node] = []
+    @Published var stack: [Level] = []
     @Published var loading = false
     @Published var error: String?
     private let cli: MoleCLI?
@@ -263,40 +265,44 @@ final class DiskModel: ObservableObject {
 
     init(cli: MoleCLI?) { self.cli = cli }
 
-    var breadcrumb: [String] {
-        guard let path else { return [] }
-        return PathDisplay.tilde(path).split(separator: "/").map(String.init)
+    var current: Level? { stack.last }
+
+    func loadRoot() {
+        stack = []
+        open(path: nil, title: "Macintosh HD")
     }
 
-    func load(_ newPath: String? = nil) {
+    func open(path: String?, title: String) {
         guard let cli else { return }
         task?.cancel()
-        path = newPath
         loading = true; error = nil
         task = Task {
             do {
                 var args = ["analyze", "--json"]
-                if let newPath { args.append(newPath) }
+                if let path { args.append(path) }
                 let out = try await cli.runChecked(args)
-                let result = try MoleJSON.decode(AnalyzeResult.self, from: out.stdout)
-                let entries = (result.entries ?? []).filter { $0.size > 0 }.sorted { $0.size > $1.size }.prefix(14)
-                nodes = entries.map { Node(entry: $0, children: nil) }
+                try Task.checkCancellation()
+                let r = try MoleJSON.decode(AnalyzeResult.self, from: out.stdout)
+                let entries = (r.entries ?? []).filter { $0.size > 0 }.sorted { $0.size > $1.size }
+                stack.append(Level(path: path, title: title, entries: entries,
+                                   largeFiles: Array((r.largeFiles ?? []).sorted { $0.size > $1.size }.prefix(6))))
                 loading = false
-                // Fill the biggest folders with their own contents, a few at a time.
-                for node in nodes.prefix(6) where node.entry.isDir != false {
-                    try Task.checkCancellation()
-                    if let sub = try? await cli.runChecked(["analyze", "--json", node.entry.path]),
-                       let r = try? MoleJSON.decode(AnalyzeResult.self, from: sub.stdout),
-                       let i = nodes.firstIndex(where: { $0.id == node.id }) {
-                        nodes[i].children = Array((r.entries ?? []).filter { $0.size > 0 }.sorted { $0.size > $1.size }.prefix(8))
-                    }
-                }
             } catch is CancellationError {
             } catch {
                 self.error = error.localizedDescription
                 loading = false
             }
         }
+    }
+
+    func back() {
+        task?.cancel(); loading = false
+        if stack.count > 1 { stack.removeLast() }
+    }
+
+    func jump(to index: Int) {
+        task?.cancel(); loading = false
+        if index < stack.count - 1 { stack.removeLast(stack.count - 1 - index) }
     }
 }
 

@@ -82,7 +82,14 @@ public struct AnalyzeResult: Decodable, Sendable {
     public let scanStatus: String?
     public let path: String?
     public let overview: Bool?
+    public struct LargeFile: Decodable, Sendable, Identifiable, Hashable {
+        public let name: String
+        public let path: String
+        public let size: Int64
+        public var id: String { path }
+    }
     public let entries: [Entry]?
+    public let largeFiles: [LargeFile]?
     public let totalSize: Int64?
 }
 

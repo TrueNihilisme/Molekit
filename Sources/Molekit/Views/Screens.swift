@@ -254,102 +254,190 @@ struct PurgeView: View {
 
 // MARK: - Disk
 
+/// TreeSize-style list: biggest first, click a folder to go inside.
+/// Molekit never deletes from here; "Show in Finder" hands control to you.
 struct DiskView: View {
     @EnvironmentObject var app: AppModel
     @ObservedObject var model: DiskModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            PageHeader(title: app.t("disk.title"), subtitle: app.t("disk.subtitle")) {
-                HStack(spacing: 8) {
-                    Button("Macintosh HD") { model.load(nil) }.buttonStyle(.plain)
-                    ForEach(Array(model.breadcrumb.enumerated()), id: \.offset) { _, part in
-                        Text("›"); Text(part).fontWeight(.bold)
-                    }
-                }
-                .font(.system(size: 13)).foregroundStyle(Theme.text.opacity(0.8))
-                .padding(.horizontal, 16).padding(.vertical, 10).glassCard(radius: 12)
+        VStack(alignment: .leading, spacing: 16) {
+            PageHeader(title: app.t("disk.title"), subtitle: app.t("disk.subtitle"))
+            HStack(spacing: 10) {
+                Button("‹ " + app.t("disk.back")) { model.back() }
+                    .buttonStyle(GhostButtonStyle())
+                    .disabled(model.stack.count <= 1)
+                    .opacity(model.stack.count <= 1 ? 0.4 : 1)
+                breadcrumb
             }
-            DiskBar()
-            ZStack {
-                if model.loading && model.nodes.isEmpty {
-                    VStack(spacing: 14) {
-                        ProgressView().controlSize(.large)
-                        Text(app.t("disk.loading")).foregroundStyle(Theme.secondary)
+            HStack(alignment: .top, spacing: 14) {
+                list.frame(maxWidth: .infinity)
+                side.frame(width: 300)
+            }
+            .frame(maxHeight: .infinity)
+        }
+        .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
+        .onAppear { if model.stack.isEmpty { model.loadRoot() } }
+    }
+
+    private var breadcrumb: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "internaldrive.fill").foregroundStyle(Color(hex: 0x7EA6D8))
+            ForEach(Array(model.stack.enumerated()), id: \.offset) { i, level in
+                if i > 0 { Text("›").foregroundStyle(Theme.tertiary) }
+                Button(level.title) { model.jump(to: i) }
+                    .buttonStyle(.plain)
+                    .fontWeight(i == model.stack.count - 1 ? .bold : .regular)
+                    .foregroundStyle(i == model.stack.count - 1 ? Theme.text : Theme.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            if model.loading { ProgressView().controlSize(.small) }
+            if let level = model.current {
+                Text(app.t("disk.inFolder", app.size(level.total), level.entries.count)).foregroundStyle(Theme.secondary)
+            }
+        }
+        .font(.system(size: 13))
+        .padding(.horizontal, 16).frame(height: 40)
+        .glassCard(radius: 12)
+    }
+
+    @ViewBuilder private var list: some View {
+        if let error = model.error {
+            Text(error).foregroundStyle(Theme.red).frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let level = model.current {
+            let maxSize = Double(level.entries.first?.size ?? 1)
+            ScrollView {
+                LazyVStack(spacing: 6) {
+                    ForEach(level.entries) { entry in
+                        DiskRow(entry: entry, fraction: Double(entry.size) / maxSize,
+                                share: Double(entry.size) / Double(max(level.total, 1))) {
+                            model.open(path: entry.path, title: entry.name)
+                        }
                     }
-                } else if let error = model.error {
-                    Text(error).foregroundStyle(Theme.red)
-                } else {
-                    treemap
                 }
+                .padding(.bottom, 4)
+            }
+            .scrollIndicators(.never)
+            .opacity(model.loading ? 0.5 : 1)
+        } else {
+            VStack(spacing: 14) {
+                ProgressView().controlSize(.large)
+                Text(app.t("disk.loading")).foregroundStyle(Theme.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
-        .onAppear { if model.nodes.isEmpty { model.load(nil) } }
     }
 
-    private var treemap: some View {
-        GeometryReader { geo in
-            let rects = Squarify.layout(model.nodes.map { Double($0.entry.size) }, in: CGRect(origin: .zero, size: geo.size))
-            let maxSize = Double(model.nodes.first?.entry.size ?? 1)
-            ZStack(alignment: .topLeading) {
-                ForEach(Array(model.nodes.enumerated()), id: \.element.id) { i, node in
-                    group(node, rect: rects[i].insetBy(dx: 3, dy: 3), weight: Double(node.entry.size) / maxSize)
+    private var side: some View {
+        VStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Macintosh HD").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+                if let space = DiskSpace.root() {
+                    (Text(app.size(space.free)).foregroundColor(Theme.accent) + Text("  " + app.t("disk.free")).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.secondary))
+                        .font(.system(size: 30, weight: .heavy))
+                        .shadow(color: Theme.accent.opacity(0.3), radius: 8)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(.black.opacity(0.35))
+                            Capsule().fill(Theme.barGradient)
+                                .frame(width: geo.size.width * CGFloat(Double(space.total - space.free) / Double(max(space.total, 1))))
+                                .shadow(color: Theme.accent.opacity(0.55), radius: 5)
+                        }
+                    }
+                    .frame(height: 8)
+                    Text(app.t("disk.usedOf", app.size(space.total - space.free), app.size(space.total)))
+                        .font(.system(size: 12)).foregroundStyle(Theme.secondary)
                 }
             }
-        }
-    }
+            .padding(18).frame(maxWidth: .infinity, alignment: .leading).glassCard(radius: 20)
 
-    private func group(_ node: DiskModel.Node, rect: CGRect, weight: Double) -> some View {
-        let header: CGFloat = rect.height > 60 ? 26 : 0
-        let inner = CGRect(x: 4, y: header, width: max(rect.width - 8, 0), height: max(rect.height - header - 4, 0))
-        let kids = node.children ?? []
-        let kidRects = Squarify.layout(kids.map { Double($0.size) }, in: inner)
-        return ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(LinearGradient(colors: [.white.opacity(0.075), .white.opacity(0.03)], startPoint: .top, endPoint: .bottom))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.white.opacity(0.09), lineWidth: 1))
-            if header > 0 {
-                HStack {
-                    Text(node.entry.name).fontWeight(.bold).lineLimit(1)
-                    Spacer(minLength: 4)
-                    Text(app.size(node.entry.size)).foregroundStyle(Theme.text.opacity(0.75)).monospacedDigit()
+            VStack(alignment: .leading, spacing: 10) {
+                Text(app.t("disk.bigFiles")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+                let files = model.current?.largeFiles ?? []
+                if files.isEmpty {
+                    Text("—").foregroundStyle(Theme.tertiary)
                 }
-                .font(.system(size: 12)).padding(.horizontal, 9).frame(height: 26)
-            }
-            if kids.isEmpty {
-                block(name: header > 0 ? "" : node.entry.name, size: header > 0 ? "" : app.size(node.entry.size),
-                      rect: inner, alpha: 0.10 + 0.25 * weight, path: node.entry.path)
-            } else {
-                ForEach(Array(kids.enumerated()), id: \.element.id) { k, kid in
-                    block(name: kid.name, size: app.size(kid.size), rect: kidRects[k],
-                          alpha: (k == 0 ? 0.30 : 0.18) * (0.4 + 0.6 * weight), path: kid.path)
+                ForEach(files) { file in
+                    HStack(spacing: 10) {
+                        Image(systemName: "doc").foregroundStyle(Color(hex: 0x7EA6D8))
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(file.name).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                            Text(PathDisplay.tilde((file.path as NSString).deletingLastPathComponent))
+                                .font(.system(size: 11)).foregroundStyle(Theme.tertiary).lineLimit(1).truncationMode(.middle)
+                        }
+                        Spacer(minLength: 4)
+                        Text(app.size(file.size)).font(.system(size: 13, weight: .bold)).monospacedDigit()
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 10)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(.black.opacity(0.2)))
+                    .contextMenu { RevealButton(path: file.path) }
                 }
-            }
-        }
-        .frame(width: rect.width, height: rect.height)
-        .offset(x: rect.minX, y: rect.minY)
-    }
-
-    private func block(name: String, size: String, rect: CGRect, alpha: Double, path: String) -> some View {
-        Button { model.load(path) } label: {
-            VStack(alignment: .leading, spacing: 2) {
                 Spacer(minLength: 0)
-                if rect.width > 70 && rect.height > 34 {
-                    Text(name).font(.system(size: rect.width * rect.height > 14000 ? 15 : 12, weight: .semibold)).lineLimit(1)
-                    Text(size).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.8)).monospacedDigit()
-                }
+                Text(app.t("disk.rightClick")).font(.system(size: 12)).foregroundStyle(Theme.tertiary)
             }
-            .padding(.horizontal, 10).padding(.vertical, 8)
-            .frame(width: max(rect.width - 4, 0), height: max(rect.height - 4, 0), alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.accent.opacity(alpha)))
-            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(.white.opacity(0.10), lineWidth: 1))
+            .padding(18).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).glassCard(radius: 20)
+        }
+    }
+}
+
+struct DiskRow: View {
+    @EnvironmentObject var app: AppModel
+    let entry: AnalyzeResult.Entry
+    let fraction: Double
+    let share: Double
+    let open: () -> Void
+    @State private var hover = false
+
+    private var isFolder: Bool { entry.isDir != false }
+
+    var body: some View {
+        Button { if isFolder { open() } } label: {
+            HStack(spacing: 14) {
+                GlyphTile(symbol: isFolder ? (entry.path.hasSuffix(".app") ? "app" : "folder") : "doc")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(entry.name).font(.system(size: 14, weight: .semibold)).lineLimit(1)
+                    Text(PathDisplay.tilde(entry.path)).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.58))
+                        .lineLimit(1).truncationMode(.middle)
+                }
+                .frame(width: 230, alignment: .leading)
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(.black.opacity(0.35))
+                        Capsule().fill(Theme.barGradient).frame(width: max(4, geo.size.width * fraction))
+                            .shadow(color: Theme.accent.opacity(0.5), radius: 5)
+                    }
+                }
+                .frame(height: 8)
+                Text(share < 0.01 ? "<1%" : "\(Int((share * 100).rounded()))%")
+                    .font(.system(size: 13)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.7)).frame(width: 46, alignment: .trailing)
+                Text(app.size(entry.size)).font(.system(size: 15, weight: .bold)).monospacedDigit().frame(width: 84, alignment: .trailing)
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Theme.tertiary).opacity(isFolder ? 1 : 0)
+            }
+            .padding(.horizontal, 14).frame(height: 60)
+            .glassCard(highlighted: hover && isFolder ? Theme.accent : nil)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .offset(x: rect.minX + 2, y: rect.minY + 2)
-        .help(PathDisplay.tilde(path))
+        .onHover { hover = $0 }
+        .animation(.easeOut(duration: 0.15), value: hover)
+        .contextMenu {
+            if isFolder { Button(app.t("disk.openHere"), action: open) }
+            RevealButton(path: entry.path)
+        }
+        .help(entry.path)
+    }
+}
+
+/// "Show in Finder": Molekit never deletes from the Disk screen.
+struct RevealButton: View {
+    @EnvironmentObject var app: AppModel
+    let path: String
+    var body: some View {
+        Button(app.t("disk.reveal")) {
+            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+        }
     }
 }
 
