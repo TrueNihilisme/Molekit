@@ -182,58 +182,76 @@ struct LiveChip: View {
 }
 
 // MARK: - Buttons
+// Hover is tracked in a small View (HoverBody); ButtonStyle itself cannot hold state reliably.
 
 struct PrimaryButtonStyle: ButtonStyle {
     var large = true
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.ui(large ? 18 : 14, .bold))
-            .foregroundStyle(Theme.ink)
-            .padding(.horizontal, large ? 40 : 20)
-            .frame(height: large ? 58 : 40)
-            .background(Capsule().fill(Theme.cyanGradient))
-            .overlay(Capsule().strokeBorder(.white.opacity(0.35), lineWidth: 1))
-            .overlay(alignment: .top) {
-                Capsule().strokeBorder(LinearGradient(colors: [.white.opacity(0.7), .clear], startPoint: .top, endPoint: .center), lineWidth: 1)
-            }
-            .shadow(color: Theme.accent.opacity(configuration.isPressed ? 0.2 : 0.38), radius: 17, y: 10)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+        HoverBody { hover in
+            configuration.label
+                .font(.ui(large ? 18 : 14, .bold))
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, large ? 40 : 20)
+                .frame(height: large ? 58 : 40)
+                .background(Capsule().fill(LinearGradient(colors: hover ? [Color(hex: 0x9AF4FF), Color(hex: 0x33BDF6)] : [Color(hex: 0x74ECFF), Color(hex: 0x1FA8F0)],
+                                                          startPoint: .top, endPoint: .bottom)))
+                .overlay(Capsule().strokeBorder(.white.opacity(hover ? 0.6 : 0.35), lineWidth: 1))
+                .shadow(color: Theme.accent.opacity(configuration.isPressed ? 0.2 : (hover ? 0.6 : 0.38)), radius: hover ? 22 : 17, y: hover ? 12 : 10)
+                .scaleEffect(configuration.isPressed ? 0.96 : (hover ? 1.03 : 1))
+                .brightness(configuration.isPressed ? -0.08 : 0)
+                .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+                .animation(.easeOut(duration: 0.18), value: hover)
+        }
     }
 }
 
 struct GhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.ui(13, .semibold))
-            .foregroundStyle(Theme.text)
-            .padding(.horizontal, 18)
-            .frame(height: 38)
-            .background(Capsule().fill(LinearGradient(colors: [.white.opacity(0.10), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom)))
-            .overlay(Capsule().strokeBorder(.white.opacity(0.14), lineWidth: 1))
-            .shadow(color: .black.opacity(0.3), radius: 8, y: 6)
-            .opacity(configuration.isPressed ? 0.8 : 1)
+        HoverBody { hover in
+            configuration.label
+                .font(.ui(13, .semibold))
+                .foregroundStyle(hover ? Theme.accent : Theme.text)
+                .padding(.horizontal, 18)
+                .frame(height: 38)
+                .background(Capsule().fill(LinearGradient(colors: hover ? [Theme.accent.opacity(0.24), Theme.accent.opacity(0.10)] : [.white.opacity(0.10), .white.opacity(0.04)],
+                                                          startPoint: .top, endPoint: .bottom)))
+                .overlay(Capsule().strokeBorder(hover ? Theme.accent.opacity(0.5) : .white.opacity(0.14), lineWidth: 1))
+                .shadow(color: hover ? Theme.accent.opacity(0.3) : .black.opacity(0.3), radius: hover ? 12 : 8, y: 6)
+                .scaleEffect(configuration.isPressed ? 0.96 : (hover ? 1.03 : 1))
+                .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+                .animation(.easeOut(duration: 0.18), value: hover)
+        }
     }
 }
 
 /// Neutral glass "Stop" that turns red on hover.
 struct StopButtonStyle: ButtonStyle {
-    @State private var hover = false
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.ui(18, .bold))
-            .foregroundStyle(hover ? Color.white : Theme.text)
-            .padding(.horizontal, 40)
-            .frame(height: 58)
-            .background(
-                Capsule().fill(hover
-                    ? AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xFF7676), Color(hex: 0xD9363F)], startPoint: .top, endPoint: .bottom))
-                    : AnyShapeStyle(LinearGradient(colors: [.white.opacity(0.10), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom)))
-            )
-            .overlay(Capsule().strokeBorder(hover ? Color(hex: 0xFFAAAA).opacity(0.6) : Theme.red.opacity(0.28), lineWidth: 1))
-            .shadow(color: hover ? Theme.red.opacity(0.45) : .black.opacity(0.35), radius: 15, y: 8)
-            .onHover { hover = $0 }
-            .animation(.easeOut(duration: 0.15), value: hover)
+        HoverBody { hover in
+            configuration.label
+                .font(.ui(18, .bold))
+                .foregroundStyle(hover ? Color.white : Theme.text)
+                .padding(.horizontal, 40)
+                .frame(height: 58)
+                .background(
+                    Capsule().fill(hover
+                        ? AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xFF7676), Color(hex: 0xD9363F)], startPoint: .top, endPoint: .bottom))
+                        : AnyShapeStyle(LinearGradient(colors: [.white.opacity(0.10), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom)))
+                )
+                .overlay(Capsule().strokeBorder(hover ? Color(hex: 0xFFAAAA).opacity(0.6) : Theme.red.opacity(0.28), lineWidth: 1))
+                .shadow(color: hover ? Theme.red.opacity(0.45) : .black.opacity(0.35), radius: 15, y: 8)
+                .scaleEffect(configuration.isPressed ? 0.96 : 1)
+                .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+                .animation(.easeOut(duration: 0.15), value: hover)
+        }
+    }
+}
+
+struct HoverBody<Content: View>: View {
+    @ViewBuilder let content: (Bool) -> Content
+    @State private var hover = false
+    var body: some View {
+        content(hover).onHover { hover = $0 }
     }
 }
 
