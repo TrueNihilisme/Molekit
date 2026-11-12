@@ -247,6 +247,25 @@ struct StopButtonStyle: ButtonStyle {
     }
 }
 
+/// Cyan rim, glow and a small lift on hover, for clickable cards.
+struct HoverLift: ViewModifier {
+    var radius: CGFloat = 16
+    @State private var hover = false
+    func body(content: Content) -> some View {
+        content
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .strokeBorder(Theme.accent.opacity(hover ? 0.5 : 0), lineWidth: 1))
+            .shadow(color: Theme.accent.opacity(hover ? 0.28 : 0), radius: 14)
+            .scaleEffect(hover ? 1.012 : 1)
+            .onHover { hover = $0 }
+            .animation(.easeOut(duration: 0.18), value: hover)
+    }
+}
+
+extension View {
+    func hoverLift(radius: CGFloat = 16) -> some View { modifier(HoverLift(radius: radius)) }
+}
+
 struct HoverBody<Content: View>: View {
     @ViewBuilder let content: (Bool) -> Content
     @State private var hover = false

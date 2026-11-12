@@ -40,6 +40,10 @@ final class AppModel: ObservableObject {
         purge = PurgeModel(cli: cli)
         tools = ToolsModel(cli: cli)
         updates = UpdateModel(cli: cli)
+        clean.onFinished = { [weak history] in
+            // mo writes the history entry as it exits; read it a moment later.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { history?.load() }
+        }
         // If the app quit in the middle of a run, put Mole's whitelist back first.
         try? WhitelistSession().restore()
     }
@@ -89,6 +93,8 @@ final class CleanModel: ObservableObject {
 
     private let cli: MoleCLI?
     private var task: Task<Void, Never>?
+    /// Called after a real clean, so History and Overview re-read `mo history`.
+    var onFinished: (() -> Void)?
     /// Mole prints one "➤ Section" header per category; used as a progress estimate.
     private var expectedSections = 18
 
@@ -165,6 +171,7 @@ final class CleanModel: ObservableObject {
                 }
                 try? session.restore()
                 result = SummaryParser.clean(output) ?? RunSummary(bytes: selectedBytes, items: nil)
+                onFinished?()
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { progress = 1 }
                 phase = .done
             } catch is CancellationError {

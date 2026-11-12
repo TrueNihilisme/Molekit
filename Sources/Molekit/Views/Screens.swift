@@ -32,7 +32,7 @@ struct OverviewView: View {
             }
             HStack {
                 if let last = history.lastRealClean {
-                    Text(app.t("overview.lastClean", last.startedAt ?? "", app.size(last.sizeBytes)))
+                    Text(app.t("overview.lastClean", HistoryModel.date(last.startedAt).map { $0.formatted(.relative(presentation: .named)) } ?? (last.startedAt ?? ""), app.size(last.sizeBytes)))
                 } else {
                     Text(app.t("overview.noClean"))
                 }
@@ -88,6 +88,7 @@ struct OverviewView: View {
             }
             Button { SystemLink.storage.open() } label: { DiskBar() }
                 .buttonStyle(.plain)
+                .hoverLift()
                 .help(app.t("link.storage"))
         }
         .padding(22).glassCard(radius: 18)
@@ -110,6 +111,7 @@ struct OverviewView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .hoverLift(radius: 22)
     }
 }
 
@@ -161,16 +163,15 @@ struct ToolsView: View {
                 Text(status).font(.ui(14, .bold)).lineLimit(1)
                     .foregroundStyle(highlight ? Theme.accent : Theme.text.opacity(0.78))
                 Spacer(minLength: 0)
-                if primary {
-                    Button(action, action: perform).buttonStyle(PrimaryButtonStyle(large: false))
-                } else {
-                    Button(action, action: perform).buttonStyle(GhostButtonStyle())
-                }
+                Button(action, action: perform).buttonStyle(GhostButtonStyle())
             }
         }
         .padding(.horizontal, 18).padding(.top, 20).padding(.bottom, 18)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .glassCard(radius: 22)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: perform)
+        .hoverLift(radius: 22)
     }
 }
 
