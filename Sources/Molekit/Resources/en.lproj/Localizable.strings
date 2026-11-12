@@ -1,0 +1,135 @@
+/* Navigation */
+"nav.clean" = "Clean";
+"nav.overview" = "Overview";
+"nav.tools" = "Tools";
+"nav.disk" = "Disk";
+"nav.status" = "Status";
+"nav.history" = "History";
+"sidebar.version" = "mo version %@";
+"disk.freeOf" = "%@ free of %@";
+
+/* Clean */
+"clean.stop" = "Stop";
+"clean.clean" = "Clean";
+"clean.scan" = "Scan";
+"clean.scanAgain" = "Scan again";
+"clean.selectAll" = "Select all";
+"clean.scanningShort" = "scanning…";
+"clean.chip.idle" = "Ready";
+"clean.chip.scanning" = "Scanning · %ld%%";
+"clean.chip.ready" = "Ready to clean";
+"clean.chip.cleaning" = "Cleaning · %ld%%";
+"clean.chip.done" = "Done";
+"clean.chip.failed" = "Something went wrong";
+"clean.title.idle" = "Let's dig in";
+"clean.title.scanning" = "Digging…";
+"clean.title.found" = "Junk found";
+"clean.title.nothing" = "Nothing to clean";
+"clean.title.cleaning" = "Cleaning up…";
+"clean.title.done" = "All clean!";
+"clean.title.failed" = "mo stopped";
+"clean.hint.idle" = "Mole will look for caches and logs. Nothing is removed yet.";
+"clean.hint.starting" = "Starting mo clean --dry-run…";
+"clean.hint.checking" = "Checking %@";
+"clean.hint.found" = "Caches and logs only. Your files stay.";
+"clean.hint.protected" = "Unticked folders are protected for this run.";
+"clean.hint.cleaning" = "mo clean is on it. Keep working.";
+"clean.ring.canFree" = "can be freed";
+"clean.ring.freed" = "freed";
+"clean.ring.scanned" = "scanned";
+"clean.list.found" = "Found";
+"clean.list.cleaning" = "Cleaning";
+"clean.list.freed" = "Freed";
+"clean.details" = "Details";
+"clean.moreFolders" = "%@ and %ld more";
+"clean.row.cleaning" = "cleaning…";
+"clean.row.skipped" = "skipped";
+
+/* Overview */
+"overview.actions" = "What you can do now";
+"overview.clean.hint" = "App caches and logs";
+"overview.scan" = "Scan";
+"overview.trash" = "Trash";
+"overview.trash.hint" = "Open in Finder";
+"overview.lastClean" = "Last clean: %@ · freed %@";
+"overview.noClean" = "No cleanup yet.";
+"overview.health" = "Mac health";
+"overview.of100" = "of 100";
+"overview.thisMac" = "This Mac";
+"health.excellent" = "Excellent";
+"health.good" = "Good";
+"health.fair" = "Fair";
+"health.poor" = "Needs attention";
+"mac.model" = "Model";
+"mac.cpu" = "Chip";
+"mac.cores" = "%ld cores";
+"mac.memory" = "Memory";
+"mac.system" = "System";
+"mac.uptime" = "Uptime";
+"mac.battery" = "Battery";
+
+/* Tools */
+"tools.subtitle" = "More from mo. Each one shows what it will do before it does it.";
+"tools.purge.title" = "Project builds";
+"tools.purge.desc" = "build, node_modules, .venv and more in your projects. Rebuilt next time you build.";
+"tools.notScanned" = "Not scanned";
+"tools.open" = "Open";
+"tools.openTerminal" = "Open in Terminal";
+"tools.uninstall.title" = "Uninstall apps";
+"tools.uninstall.desc" = "An app with its settings, caches and leftovers. Moved to the Trash by default.";
+"tools.apps" = "%ld apps";
+"tools.optimize.title" = "Optimize";
+"tools.optimize.desc" = "Refreshes macOS caches and services. Shows the full list before it runs.";
+"tools.installer.title" = "Installers";
+"tools.installer.desc" = "Forgotten .dmg, .pkg and install archives.";
+"tools.slim.title" = "Slim apps";
+"tools.slim.desc" = "Removes Intel code from universal apps. Apple silicon does not use it.";
+
+/* Purge */
+"purge.subtitle" = "Build output in your projects. It comes back the next time you build.";
+"purge.rescan" = "Scan again";
+"purge.empty" = "No build output found.";
+"purge.done" = "Freed %@";
+"purge.selected" = "Selected:";
+"purge.run" = "Remove";
+"purge.manual" = "Dependencies must be reinstalled by hand";
+"purge.rebuilds" = "Rebuilt automatically";
+
+/* Disk */
+"disk.title" = "What takes up space";
+"disk.subtitle" = "Burrowing through your disk, one folder at a time. Click a block to dig in.";
+"disk.loading" = "mo analyze is measuring your disk…";
+
+/* Status */
+"status.subtitle" = "Live from mo status --watch · updates every second";
+"status.cpu" = "CPU";
+"status.cpuSub" = "Load %.2f · %ld cores";
+"status.memSub" = "of %@ · pressure %@";
+"status.disk" = "Disk";
+"status.free" = "%@ free";
+"status.diskSub" = "of %@ · SMART %@";
+"status.cycles" = "%ld cycles";
+"status.cores" = "CPU cores";
+"status.processes" = "Top processes";
+
+/* History */
+"history.subtitle" = "From mo history · full logs in ~/Library/Logs/mole";
+"history.freedToday" = "Freed today";
+"history.runsToday" = "Runs today";
+"history.errors" = "Errors";
+"history.recent" = "Recent runs";
+"history.empty" = "No runs yet.";
+"history.itemsRemoved" = "%ld items removed";
+"history.itemsFound" = "%ld items found";
+"history.done" = "Done";
+"history.preview" = "Preview";
+"history.cmd.clean" = "Clean";
+"history.cmd.purge" = "Project builds";
+"history.cmd.optimize" = "Optimize";
+"history.cmd.uninstall" = "Uninstall";
+"history.cmd.installer" = "Installers";
+
+/* Mole missing */
+"missing.title" = "Mole is not installed";
+"missing.body" = "Molekit is a window for the free Mole CLI. Install it with Homebrew, then reopen Molekit.";
+"missing.copy" = "Copy command";

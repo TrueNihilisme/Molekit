@@ -62,6 +62,7 @@ public struct StatusSnapshot: Decodable, Sendable {
     public let disks: [Disk]?
     public let batteries: [Battery]?
     public let topProcesses: [Process]?
+    public let trashSize: Int64?
 
     /// The startup volume ("/").
     public var rootDisk: Disk? { disks?.first(where: { $0.mount == "/" }) ?? disks?.first }

@@ -1,0 +1,152 @@
+/* Навігація */
+"nav.clean" = "Очищення";
+"nav.overview" = "Огляд";
+"nav.tools" = "Інструменти";
+"nav.disk" = "Диск";
+"nav.status" = "Стан";
+"nav.history" = "Історія";
+"sidebar.version" = "Версія mo %@";
+"disk.freeOf" = "Вільно %@ з %@";
+
+/* Очищення */
+"clean.stop" = "Зупинити";
+"clean.clean" = "Почистити";
+"clean.scan" = "Сканувати";
+"clean.scanAgain" = "Сканувати знову";
+"clean.selectAll" = "Обрати все";
+"clean.scanningShort" = "шукаю…";
+"clean.chip.idle" = "Готовий";
+"clean.chip.scanning" = "Сканую · %ld%%";
+"clean.chip.ready" = "Готово до очищення";
+"clean.chip.cleaning" = "Прибираю · %ld%%";
+"clean.chip.done" = "Готово";
+"clean.chip.failed" = "Щось пішло не так";
+"clean.title.idle" = "Почнімо копати";
+"clean.title.scanning" = "Шукаю сміття…";
+"clean.title.found" = "Знайдено сміття";
+"clean.title.nothing" = "Чистити нічого";
+"clean.title.cleaning" = "Прибираю…";
+"clean.title.done" = "Чисто!";
+"clean.title.failed" = "mo зупинився";
+"clean.hint.idle" = "Mole пошукає кеші й логи. Поки нічого не видаляється.";
+"clean.hint.starting" = "Запускаю mo clean --dry-run…";
+"clean.hint.checking" = "Перевіряю: %@";
+"clean.hint.found" = "Лише кеші й логи. Твої файли не чіпаємо.";
+"clean.hint.protected" = "Зняті з вибору теки захищені на цей запуск.";
+"clean.hint.cleaning" = "Видаляє mo clean. Можна працювати далі.";
+"clean.ring.canFree" = "можна звільнити";
+"clean.ring.freed" = "звільнено";
+"clean.ring.scanned" = "переглянуто";
+"clean.list.found" = "Знайдено";
+"clean.list.cleaning" = "Прибираю";
+"clean.list.freed" = "Звільнено";
+"clean.details" = "Деталі";
+"clean.moreFolders" = "%@ і ще %ld";
+"clean.row.cleaning" = "чищу…";
+"clean.row.skipped" = "пропущено";
+
+/* Розділи Mole */
+"section.User essentials" = "Кеші користувача";
+"section.App caches" = "Кеші програм";
+"section.Browsers" = "Браузери";
+"section.Cloud & Office" = "Хмара й Office";
+"section.Developer tools" = "Інструменти розробника";
+"section.Applications" = "Програми";
+"section.Virtualization" = "Віртуалізація";
+"section.Application Support" = "Application Support: логи й кеші";
+"section.App leftovers" = "Залишки видалених програм";
+"section.Apple Silicon updates" = "Оновлення Apple Silicon";
+"section.Device backups & firmware" = "Резервні копії й прошивки";
+"section.Time Machine" = "Time Machine";
+"section.Large files" = "Великі файли";
+"section.System Data clues" = "Системні дані";
+"section.Project artifacts" = "Збірки проєктів";
+
+/* Огляд */
+"overview.actions" = "Що можна зробити зараз";
+"overview.clean.hint" = "Кеші й логи програм";
+"overview.scan" = "Сканувати";
+"overview.trash" = "Кошик";
+"overview.trash.hint" = "Відкрити у Finder";
+"overview.lastClean" = "Остання чистка: %@ · звільнено %@";
+"overview.noClean" = "Ще не чистили.";
+"overview.health" = "Стан Мака";
+"overview.of100" = "з 100";
+"overview.thisMac" = "Цей Мак";
+"health.excellent" = "Відмінно";
+"health.good" = "Добре";
+"health.fair" = "Задовільно";
+"health.poor" = "Потребує уваги";
+"mac.model" = "Модель";
+"mac.cpu" = "Процесор";
+"mac.cores" = "ядер: %ld";
+"mac.memory" = "Пам'ять";
+"mac.system" = "Система";
+"mac.uptime" = "Без перезавантаження";
+"mac.battery" = "Батарея";
+
+/* Інструменти */
+"tools.subtitle" = "Решта можливостей mo. Кожен спершу показує, що зробить, і лише потім робить.";
+"tools.purge.title" = "Збірки проєктів";
+"tools.purge.desc" = "build, node_modules, .venv у проєктах. Збирається знову при наступній збірці.";
+"tools.notScanned" = "Ще не сканувалось";
+"tools.open" = "Відкрити";
+"tools.openTerminal" = "У Терміналі";
+"tools.uninstall.title" = "Видалення програм";
+"tools.uninstall.desc" = "Програма разом із налаштуваннями, кешами й залишками. За замовчуванням у Кошик.";
+"tools.apps" = "Програм: %ld";
+"tools.optimize.title" = "Оптимізація";
+"tools.optimize.desc" = "Оновлює системні кеші та служби macOS. Перед запуском покаже повний список дій.";
+"tools.installer.title" = "Інсталятори";
+"tools.installer.desc" = "Забуті .dmg, .pkg та архіви встановлення.";
+"tools.slim.title" = "Зменшити програми";
+"tools.slim.desc" = "Вирізає код для Intel з універсальних програм. Apple Silicon його не використовує.";
+
+/* Збірки проєктів */
+"purge.subtitle" = "Результати збірки в проєктах. Зберуться знову при наступній збірці.";
+"purge.rescan" = "Сканувати знову";
+"purge.empty" = "Результатів збірки не знайдено.";
+"purge.done" = "Звільнено %@";
+"purge.selected" = "Вибрано:";
+"purge.run" = "Прибрати";
+"purge.manual" = "Залежності доведеться ставити знову вручну";
+"purge.rebuilds" = "Збереться знову автоматично";
+
+/* Диск */
+"disk.title" = "Що займає місце";
+"disk.subtitle" = "Риємо диск теку за текою. Натисни на блок, щоб зазирнути глибше.";
+"disk.loading" = "mo analyze міряє диск…";
+
+/* Стан */
+"status.subtitle" = "Наживо з mo status --watch · оновлюється щосекунди";
+"status.cpu" = "Процесор";
+"status.cpuSub" = "Навантаження %.2f · ядер: %ld";
+"status.memSub" = "з %@ · тиск %@";
+"status.disk" = "Диск";
+"status.free" = "Вільно %@";
+"status.diskSub" = "з %@ · SMART %@";
+"status.cycles" = "циклів: %ld";
+"status.cores" = "Ядра процесора";
+"status.processes" = "Найактивніші процеси";
+
+/* Історія */
+"history.subtitle" = "З mo history · повні журнали в ~/Library/Logs/mole";
+"history.freedToday" = "Звільнено сьогодні";
+"history.runsToday" = "Запусків сьогодні";
+"history.errors" = "Помилок";
+"history.recent" = "Останні запуски";
+"history.empty" = "Запусків ще не було.";
+"history.itemsRemoved" = "Видалено об'єктів: %ld";
+"history.itemsFound" = "Знайдено об'єктів: %ld";
+"history.done" = "Виконано";
+"history.preview" = "Перегляд";
+"history.cmd.clean" = "Очищення";
+"history.cmd.purge" = "Збірки проєктів";
+"history.cmd.optimize" = "Оптимізація";
+"history.cmd.uninstall" = "Видалення програм";
+"history.cmd.installer" = "Інсталятори";
+
+/* Mole не встановлено */
+"missing.title" = "Mole не встановлено";
+"missing.body" = "Molekit — це вікно для безкоштовного Mole CLI. Встанови його через Homebrew і відкрий Molekit знову.";
+"missing.copy" = "Скопіювати команду";

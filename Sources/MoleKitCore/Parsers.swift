@@ -101,6 +101,7 @@ public enum CleanListParser {
 public struct RunSummary: Sendable, Equatable {
     public let bytes: Int64
     public let items: Int?
+    public init(bytes: Int64, items: Int?) { self.bytes = bytes; self.items = items }
 }
 
 public enum SummaryParser {

@@ -1,0 +1,577 @@
+import SwiftUI
+import MoleKitCore
+
+// MARK: - Overview
+
+struct OverviewView: View {
+    @EnvironmentObject var app: AppModel
+    @ObservedObject var status: StatusModel
+    @ObservedObject var clean: CleanModel
+    @ObservedObject var purge: PurgeModel
+    @ObservedObject var history: HistoryModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            PageHeader(title: app.t("nav.overview"), subtitle: "Small mole. Big cleanup.")
+            HStack(alignment: .top, spacing: 14) {
+                healthCard.frame(width: 300)
+                macCard
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            Text(app.t("overview.actions")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+            HStack(spacing: 14) {
+                actionCard(symbol: "sparkles", title: app.t("nav.clean"), hint: app.t("overview.clean.hint"),
+                           value: clean.preview.map { app.size($0.total) } ?? app.t("overview.scan")) { app.tab = .clean }
+                actionCard(symbol: "folder.badge.gearshape", title: app.t("tools.purge.title"), hint: "build, node_modules, .venv",
+                           value: purge.preview.map { app.size($0.total) } ?? app.t("overview.scan")) { app.tab = .tools; app.showPurge = true }
+                actionCard(symbol: "trash.fill", title: app.t("overview.trash"), hint: app.t("overview.trash.hint"),
+                           value: status.snapshot?.trashSize.map(app.size) ?? "—") { NSWorkspace.shared.open(URL(fileURLWithPath: NSHomeDirectory() + "/.Trash")) }
+            }
+            HStack {
+                if let last = history.lastRealClean {
+                    Text(app.t("overview.lastClean", last.startedAt ?? "", app.size(last.sizeBytes)))
+                } else {
+                    Text(app.t("overview.noClean"))
+                }
+                Spacer()
+                Button(app.t("nav.history") + " ›") { app.tab = .history }
+                    .buttonStyle(.plain).foregroundStyle(Theme.accent).font(.system(size: 13, weight: .semibold))
+            }
+            .font(.system(size: 13)).foregroundStyle(Theme.text.opacity(0.85))
+            .padding(.horizontal, 18).padding(.vertical, 14).glassCard()
+        }
+        .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
+        .onAppear { status.refreshOnce(); history.load() }
+    }
+
+    private var healthCard: some View {
+        VStack(spacing: 14) {
+            Text(app.t("overview.health")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            ZStack {
+                ProgressRing(progress: Double(status.snapshot?.healthScore ?? 0) / 100, size: 168, lineWidth: 8)
+                VStack(spacing: 2) {
+                    Text("\(status.snapshot?.healthScore ?? 0)").font(.system(size: 46, weight: .heavy)).monospacedDigit()
+                    Text(app.t("overview.of100")).font(.system(size: 13)).foregroundStyle(Theme.secondary)
+                }
+            }
+            Text(healthWord).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.accent)
+        }
+        .padding(22).frame(maxHeight: .infinity, alignment: .top).glassCard(radius: 18)
+    }
+
+    private var healthWord: String {
+        guard let score = status.snapshot?.healthScore else { return "—" }
+        return app.t(score >= 90 ? "health.excellent" : score >= 70 ? "health.good" : score >= 50 ? "health.fair" : "health.poor")
+    }
+
+    private var macCard: some View {
+        let s = status.snapshot
+        let specs: [(String, String)] = [
+            (app.t("mac.model"), s?.hardware?.model ?? "—"),
+            (app.t("mac.cpu"), [s?.hardware?.cpuModel, s?.cpu?.coreCount.map { app.t("mac.cores", $0) }].compactMap { $0 }.joined(separator: " · ")),
+            (app.t("mac.memory"), s?.hardware?.totalRam ?? "—"),
+            (app.t("mac.system"), s?.hardware?.osVersion ?? "—"),
+            (app.t("mac.uptime"), s?.uptime ?? "—"),
+            (app.t("mac.battery"), s?.batteries?.first.map { "\(Int($0.percent ?? 0))% · \($0.health ?? "")" } ?? "—")
+        ]
+        return VStack(alignment: .leading, spacing: 16) {
+            Text(app.t("overview.thisMac")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
+                ForEach(specs, id: \.0) { k, v in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(k).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.62))
+                        Text(v.isEmpty ? "—" : v).font(.system(size: 16, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16).padding(.vertical, 14).glassCard(radius: 14)
+                }
+            }
+            DiskBar()
+        }
+        .padding(22).glassCard(radius: 18)
+    }
+
+    private func actionCard(symbol: String, title: String, hint: String, value: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 12) {
+                BigTile(symbol: symbol, size: 80)
+                VStack(spacing: 4) {
+                    Text(title).font(.system(size: 17, weight: .bold))
+                    Text(hint).font(.system(size: 13)).foregroundStyle(Theme.secondary).lineLimit(1)
+                    Text(value).font(.system(size: 26, weight: .heavy)).monospacedDigit()
+                        .foregroundStyle(Theme.accent).shadow(color: Theme.accent.opacity(0.35), radius: 8).padding(.top, 2)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(16)
+            .glassCard(radius: 22)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Tools
+
+struct ToolsView: View {
+    @EnvironmentObject var app: AppModel
+    @ObservedObject var tools: ToolsModel
+    @ObservedObject var purge: PurgeModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            PageHeader(title: app.t("nav.tools"), subtitle: app.t("tools.subtitle"))
+            Grid(horizontalSpacing: 14, verticalSpacing: 14) {
+                GridRow {
+                    card(symbol: "folder.badge.gearshape", title: app.t("tools.purge.title"), command: "mo purge", desc: app.t("tools.purge.desc"),
+                         status: purge.preview.map { app.size($0.total) } ?? app.t("tools.notScanned"), highlight: purge.preview != nil,
+                         action: app.t("tools.open"), primary: true) { app.showPurge = true }
+                    card(symbol: "trash.fill", title: app.t("tools.uninstall.title"), command: "mo uninstall", desc: app.t("tools.uninstall.desc"),
+                         status: tools.appCount.map { app.t("tools.apps", $0) } ?? "…", action: app.t("tools.openTerminal")) { tools.openInTerminal("mo uninstall") }
+                    card(symbol: "bolt.fill", title: app.t("tools.optimize.title"), command: "mo optimize", desc: app.t("tools.optimize.desc"),
+                         status: "", action: app.t("tools.openTerminal")) { tools.openInTerminal("mo optimize") }
+                }
+                GridRow {
+                    card(symbol: "arrow.down.to.line", title: app.t("tools.installer.title"), command: "mo installer", desc: app.t("tools.installer.desc"),
+                         status: "", action: app.t("tools.openTerminal")) { tools.openInTerminal("mo installer") }
+                    card(symbol: "cpu.fill", title: app.t("tools.slim.title"), command: "mo slim", desc: app.t("tools.slim.desc"),
+                         status: "", action: app.t("tools.openTerminal")) { tools.openInTerminal("mo slim") }
+                    Color.clear
+                }
+            }
+        }
+        .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
+        .onAppear { tools.load(); if purge.phase == .idle { purge.scan() } }
+    }
+
+    private func card(symbol: String, title: String, command: String, desc: String, status: String, highlight: Bool = false,
+                      action: String, primary: Bool = false, perform: @escaping () -> Void) -> some View {
+        VStack(spacing: 10) {
+            BigTile(symbol: symbol, size: 96)
+            Text(title).font(.system(size: 17, weight: .bold)).padding(.top, 4)
+            Text(command).font(.system(size: 12, design: .monospaced)).foregroundStyle(Theme.text.opacity(0.78))
+                .padding(.horizontal, 10).padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: 8).fill(.black.opacity(0.28)))
+            Text(desc).font(.system(size: 13)).foregroundStyle(Theme.text.opacity(0.66)).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            HStack(spacing: 10) {
+                Text(status).font(.system(size: 14, weight: .bold)).lineLimit(1)
+                    .foregroundStyle(highlight ? Theme.accent : Theme.text.opacity(0.78))
+                Spacer(minLength: 0)
+                if primary {
+                    Button(action, action: perform).buttonStyle(PrimaryButtonStyle(large: false))
+                } else {
+                    Button(action, action: perform).buttonStyle(GhostButtonStyle())
+                }
+            }
+        }
+        .padding(.horizontal, 18).padding(.top, 20).padding(.bottom, 18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .glassCard(radius: 22)
+    }
+}
+
+// MARK: - Purge (project build output)
+
+struct PurgeView: View {
+    @EnvironmentObject var app: AppModel
+    @ObservedObject var model: PurgeModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Button("‹ " + app.t("nav.tools")) { app.showPurge = false }
+                .buttonStyle(.plain).foregroundStyle(Theme.accent).font(.system(size: 13, weight: .semibold))
+            PageHeader(title: app.t("tools.purge.title"), subtitle: app.t("purge.subtitle")) {
+                Button(app.t("purge.rescan")) { model.scan() }.buttonStyle(GhostButtonStyle())
+            }
+            ScrollView {
+                LazyVStack(spacing: 6) {
+                    switch model.phase {
+                    case .scanning, .idle:
+                        ProgressView().controlSize(.large).padding(40)
+                    case .failed(let message):
+                        Text(message).foregroundStyle(Theme.red).padding()
+                    default:
+                        if model.items.isEmpty {
+                            Text(app.t("purge.empty")).foregroundStyle(Theme.secondary).padding(30)
+                        }
+                        ForEach(model.items) { item in row(item) }
+                    }
+                }
+            }
+            .scrollIndicators(.never)
+            HStack {
+                Group {
+                    if model.phase == .done {
+                        Text(app.t("purge.done", app.size(model.freed)))
+                    } else {
+                        Text(app.t("purge.selected")) + Text(" " + app.size(model.selectedBytes)).foregroundColor(Theme.accent).bold()
+                    }
+                }
+                .font(.system(size: 14))
+                Spacer()
+                Button(app.t("purge.run")) { model.run() }
+                    .buttonStyle(PrimaryButtonStyle(large: false))
+                    .disabled(model.phase != .ready || model.selectedBytes == 0)
+                    .opacity(model.phase == .ready && model.selectedBytes > 0 ? 1 : 0.5)
+            }
+            .padding(.leading, 22).padding(.trailing, 12).padding(.vertical, 12)
+            .glassCard(radius: 20, highlighted: .white)
+        }
+        .padding(.top, 20).padding(.horizontal, 24).padding(.bottom, 22)
+        .onAppear { if model.phase == .idle { model.scan() } }
+    }
+
+    private func row(_ item: PurgePreview.Item) -> some View {
+        HStack(spacing: 14) {
+            GreenCheckbox(isOn: Binding(get: { !model.deselected.contains(item.path) }, set: { _ in model.toggle(item.path) }), label: item.path)
+            GlyphTile(symbol: symbol(item.kind))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.path).font(.system(size: 14, weight: .semibold)).lineLimit(1).truncationMode(.middle)
+                Text(app.t(item.needsManualRestore ? "purge.manual" : "purge.rebuilds"))
+                    .font(.system(size: 12)).foregroundStyle(item.needsManualRestore ? Color(hex: 0xF2C46B) : Theme.text.opacity(0.6))
+            }
+            Spacer()
+            Text(item.kind).font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.82))
+                .padding(.horizontal, 10).padding(.vertical, 4).background(Capsule().fill(.black.opacity(0.25)))
+            Text(app.size(item.bytes)).font(.system(size: 14, weight: .bold)).monospacedDigit().frame(width: 86, alignment: .trailing)
+        }
+        .padding(.horizontal, 16).frame(height: 60).glassCard()
+    }
+
+    private func symbol(_ kind: String) -> String {
+        switch kind {
+        case "node_modules": return "shippingbox"
+        case "Python venv", "Python cache": return "chevron.left.forwardslash.chevron.right"
+        case "Swift build": return "swift"
+        case "Gradle": return "cube"
+        default: return "hammer"
+        }
+    }
+}
+
+// MARK: - Disk
+
+struct DiskView: View {
+    @EnvironmentObject var app: AppModel
+    @ObservedObject var model: DiskModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            PageHeader(title: app.t("disk.title"), subtitle: app.t("disk.subtitle")) {
+                HStack(spacing: 8) {
+                    Button("Macintosh HD") { model.load(nil) }.buttonStyle(.plain)
+                    ForEach(Array(model.breadcrumb.enumerated()), id: \.offset) { _, part in
+                        Text("›"); Text(part).fontWeight(.bold)
+                    }
+                }
+                .font(.system(size: 13)).foregroundStyle(Theme.text.opacity(0.8))
+                .padding(.horizontal, 16).padding(.vertical, 10).glassCard(radius: 12)
+            }
+            DiskBar()
+            ZStack {
+                if model.loading && model.nodes.isEmpty {
+                    VStack(spacing: 14) {
+                        ProgressView().controlSize(.large)
+                        Text(app.t("disk.loading")).foregroundStyle(Theme.secondary)
+                    }
+                } else if let error = model.error {
+                    Text(error).foregroundStyle(Theme.red)
+                } else {
+                    treemap
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
+        .onAppear { if model.nodes.isEmpty { model.load(nil) } }
+    }
+
+    private var treemap: some View {
+        GeometryReader { geo in
+            let rects = Squarify.layout(model.nodes.map { Double($0.entry.size) }, in: CGRect(origin: .zero, size: geo.size))
+            let maxSize = Double(model.nodes.first?.entry.size ?? 1)
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(model.nodes.enumerated()), id: \.element.id) { i, node in
+                    group(node, rect: rects[i].insetBy(dx: 3, dy: 3), weight: Double(node.entry.size) / maxSize)
+                }
+            }
+        }
+    }
+
+    private func group(_ node: DiskModel.Node, rect: CGRect, weight: Double) -> some View {
+        let header: CGFloat = rect.height > 60 ? 26 : 0
+        let inner = CGRect(x: 4, y: header, width: max(rect.width - 8, 0), height: max(rect.height - header - 4, 0))
+        let kids = node.children ?? []
+        let kidRects = Squarify.layout(kids.map { Double($0.size) }, in: inner)
+        return ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(LinearGradient(colors: [.white.opacity(0.075), .white.opacity(0.03)], startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.white.opacity(0.09), lineWidth: 1))
+            if header > 0 {
+                HStack {
+                    Text(node.entry.name).fontWeight(.bold).lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(app.size(node.entry.size)).foregroundStyle(Theme.text.opacity(0.75)).monospacedDigit()
+                }
+                .font(.system(size: 12)).padding(.horizontal, 9).frame(height: 26)
+            }
+            if kids.isEmpty {
+                block(name: header > 0 ? "" : node.entry.name, size: header > 0 ? "" : app.size(node.entry.size),
+                      rect: inner, alpha: 0.10 + 0.25 * weight, path: node.entry.path)
+            } else {
+                ForEach(Array(kids.enumerated()), id: \.element.id) { k, kid in
+                    block(name: kid.name, size: app.size(kid.size), rect: kidRects[k],
+                          alpha: (k == 0 ? 0.30 : 0.18) * (0.4 + 0.6 * weight), path: kid.path)
+                }
+            }
+        }
+        .frame(width: rect.width, height: rect.height)
+        .offset(x: rect.minX, y: rect.minY)
+    }
+
+    private func block(name: String, size: String, rect: CGRect, alpha: Double, path: String) -> some View {
+        Button { model.load(path) } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Spacer(minLength: 0)
+                if rect.width > 70 && rect.height > 34 {
+                    Text(name).font(.system(size: rect.width * rect.height > 14000 ? 15 : 12, weight: .semibold)).lineLimit(1)
+                    Text(size).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.8)).monospacedDigit()
+                }
+            }
+            .padding(.horizontal, 10).padding(.vertical, 8)
+            .frame(width: max(rect.width - 4, 0), height: max(rect.height - 4, 0), alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.accent.opacity(alpha)))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(.white.opacity(0.10), lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .offset(x: rect.minX + 2, y: rect.minY + 2)
+        .help(PathDisplay.tilde(path))
+    }
+}
+
+// MARK: - Status
+
+struct StatusView: View {
+    @EnvironmentObject var app: AppModel
+    @ObservedObject var model: StatusModel
+
+    var body: some View {
+        let s = model.snapshot
+        VStack(alignment: .leading, spacing: 18) {
+            PageHeader(title: app.t("nav.status"), subtitle: app.t("status.subtitle")) { LiveChip(text: "Live") }
+            HStack(spacing: 14) {
+                tile(app.t("status.cpu"), String(format: "%.0f%%", s?.cpu?.usage ?? 0), (s?.cpu?.usage ?? 0) / 100,
+                     app.t("status.cpuSub", s?.cpu?.load1 ?? 0, s?.cpu?.coreCount ?? 0))
+                tile(app.t("mac.memory"), app.size(s?.memory?.used ?? 0), (s?.memory?.usedPercent ?? 0) / 100,
+                     app.t("status.memSub", app.size(s?.memory?.total ?? 0), s?.memory?.pressure ?? "—"))
+                diskTile
+                tile(app.t("mac.battery"), "\(Int(s?.batteries?.first?.percent ?? 0))%", (s?.batteries?.first?.percent ?? 0) / 100,
+                     [s?.batteries?.first?.timeLeft, s?.batteries?.first?.cycleCount.map { app.t("status.cycles", $0) }, s?.batteries?.first?.health]
+                        .compactMap { $0 }.joined(separator: " · "))
+            }
+            HStack(alignment: .top, spacing: 14) {
+                cores
+                processes
+            }
+            .frame(maxHeight: .infinity)
+        }
+        .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
+        .onAppear { model.startLive() }
+        .onDisappear { model.stopLive() }
+    }
+
+    private var diskTile: some View {
+        let space = DiskSpace.root()
+        let used = Double((space?.total ?? 0) - (space?.free ?? 0)) / Double(max(space?.total ?? 1, 1))
+        return tile(app.t("status.disk"), app.t("status.free", app.size(space?.free ?? 0)), used,
+                    app.t("status.diskSub", app.size(space?.total ?? 0), model.snapshot?.rootDisk?.smartStatus ?? "—"))
+    }
+
+    private func tile(_ title: String, _ value: String, _ fraction: Double, _ sub: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.7))
+            Text(value).font(.system(size: 30, weight: .heavy)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                .contentTransition(.numericText())
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(.black.opacity(0.35))
+                    Capsule().fill(Theme.barGradient).frame(width: geo.size.width * min(max(fraction, 0), 1))
+                        .shadow(color: Theme.accent.opacity(0.55), radius: 5)
+                }
+            }
+            .frame(height: 6)
+            Text(sub).font(.system(size: 12)).foregroundStyle(Theme.secondary).lineLimit(1)
+        }
+        .padding(.horizontal, 20).padding(.vertical, 18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard(radius: 18)
+        .animation(.easeOut(duration: 0.4), value: fraction)
+    }
+
+    private var cores: some View {
+        let per = model.snapshot?.cpu?.perCore ?? []
+        let p = model.snapshot?.cpu?.pCoreCount ?? 0
+        return VStack(alignment: .leading, spacing: 14) {
+            Text(app.t("status.cores")).font(.system(size: 15, weight: .semibold))
+            HStack(alignment: .bottom, spacing: 10) {
+                ForEach(Array(per.enumerated()), id: \.offset) { i, v in
+                    VStack(spacing: 6) {
+                        Text("\(Int(v))%").font(.system(size: 11)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.7))
+                        GeometryReader { geo in
+                            VStack { Spacer(minLength: 0)
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(LinearGradient(colors: [Color(hex: 0x74ECFF).opacity(i < p ? 1 : 0.7), Theme.accentDeep.opacity(i < p ? 1 : 0.6)], startPoint: .top, endPoint: .bottom))
+                                    .frame(height: max(3, geo.size.height * v / 100))
+                                    .shadow(color: i < p ? Theme.accent.opacity(0.45) : .clear, radius: 6)
+                            }
+                        }
+                        .background(RoundedRectangle(cornerRadius: 8).fill(.white.opacity(0.06)))
+                        Text(i < p ? "P\(i + 1)" : "E\(i - p + 1)").font(.system(size: 11)).foregroundStyle(Theme.tertiary)
+                    }
+                    .animation(.easeOut(duration: 0.4), value: v)
+                }
+            }
+        }
+        .padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).glassCard(radius: 18)
+    }
+
+    private var processes: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(app.t("status.processes")).font(.system(size: 15, weight: .semibold)).padding(.bottom, 6)
+            ForEach((model.snapshot?.topProcesses ?? []).prefix(6)) { proc in
+                HStack(spacing: 12) {
+                    Text(proc.name ?? "?").font(.system(size: 14, weight: .medium)).lineLimit(1)
+                    Spacer()
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(.black.opacity(0.35))
+                            Capsule().fill(Theme.barGradient).frame(width: geo.size.width * min((proc.cpu ?? 0) / 100, 1))
+                        }
+                    }
+                    .frame(width: 120, height: 6)
+                    Text(String(format: "%.1f%%", proc.cpu ?? 0)).font(.system(size: 13, weight: .bold)).monospacedDigit().frame(width: 58, alignment: .trailing)
+                    Text(app.size(proc.memoryBytes ?? 0)).font(.system(size: 12)).foregroundStyle(Theme.secondary).monospacedDigit().frame(width: 70, alignment: .trailing)
+                }
+                .padding(.horizontal, 12).frame(height: 44)
+                .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.04)))
+            }
+        }
+        .padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).glassCard(radius: 18)
+    }
+}
+
+// MARK: - History
+
+struct HistoryView: View {
+    @EnvironmentObject var app: AppModel
+    @ObservedObject var model: HistoryModel
+
+    var body: some View {
+        let today = model.today
+        let freed = today.filter { !$0.isPreview }.reduce(Int64(0)) { $0 + $1.sizeBytes }
+        let failed = today.reduce(0) { $0 + ($1.failedTasks ?? 0) + ($1.actions?.failed ?? 0) }
+        VStack(alignment: .leading, spacing: 16) {
+            PageHeader(title: app.t("nav.history"), subtitle: app.t("history.subtitle"))
+            HStack(spacing: 14) {
+                stat("sparkles", app.t("history.freedToday"), app.size(freed), Theme.accent)
+                stat("clock", app.t("history.runsToday"), "\(today.count)", Theme.accent)
+                stat("checkmark.shield.fill", app.t("history.errors"), "\(failed)", failed == 0 ? Theme.green : Theme.red)
+            }
+            Text(app.t("history.recent")).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+            ScrollView {
+                LazyVStack(spacing: 6) {
+                    ForEach(model.sessions) { row($0) }
+                    if model.sessions.isEmpty && !model.loading {
+                        Text(app.t("history.empty")).foregroundStyle(Theme.secondary).padding(30)
+                    }
+                }
+            }
+            .scrollIndicators(.never)
+        }
+        .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
+        .onAppear { model.load() }
+    }
+
+    private func stat(_ symbol: String, _ title: String, _ value: String, _ color: Color) -> some View {
+        HStack(spacing: 16) {
+            GlyphTile(symbol: symbol, size: 64, tint: color)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.text.opacity(0.68))
+                Text(value).font(.system(size: 30, weight: .heavy)).monospacedDigit().foregroundStyle(color)
+                    .shadow(color: color.opacity(0.35), radius: 8)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 18).padding(.vertical, 16).glassCard(radius: 22)
+    }
+
+    private func row(_ s: HistoryResult.Session) -> some View {
+        let done = !s.isPreview
+        let date = HistoryModel.date(s.startedAt)
+        return HStack(spacing: 14) {
+            Text(date.map { $0.formatted(date: Calendar.current.isDateInToday($0) ? .omitted : .abbreviated, time: .shortened) } ?? "—")
+                .font(.system(size: 13, weight: .semibold)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.78))
+                .frame(width: 110, alignment: .leading)
+            GlyphTile(symbol: symbol(s.baseCommand))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(name(s.baseCommand)).font(.system(size: 14, weight: .semibold))
+                Text(app.t(done ? "history.itemsRemoved" : "history.itemsFound", s.items ?? 0)).font(.system(size: 12)).foregroundStyle(Theme.text.opacity(0.6))
+            }
+            Spacer()
+            HStack(spacing: 6) {
+                if done { Image(systemName: "checkmark").font(.system(size: 10, weight: .heavy)) }
+                Text(app.t(done ? "history.done" : "history.preview"))
+            }
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(done ? Theme.greenInk : Theme.text.opacity(0.75))
+            .padding(.horizontal, 12).padding(.vertical, 5)
+            .background(Capsule().fill(done ? AnyShapeStyle(Theme.greenGradient) : AnyShapeStyle(Color.black.opacity(0.25))))
+            Text(s.sizeBytes > 0 ? app.size(s.sizeBytes) : "—").font(.system(size: 15, weight: .bold)).monospacedDigit()
+                .foregroundStyle(done ? Theme.green : Theme.text).frame(width: 92, alignment: .trailing)
+        }
+        .padding(.horizontal, 18).frame(height: 62)
+        .glassCard(highlighted: done ? Theme.green : nil)
+    }
+
+    private func symbol(_ command: String) -> String {
+        switch command {
+        case "clean": return "square.stack.3d.up"
+        case "purge": return "folder.badge.gearshape"
+        case "optimize": return "bolt"
+        case "uninstall": return "trash"
+        case "installer": return "arrow.down.to.line"
+        default: return "terminal"
+        }
+    }
+    private func name(_ command: String) -> String {
+        let key = "history.cmd." + command
+        let v = app.t(key)
+        return v == key ? command : v
+    }
+}
+
+// MARK: - Mole missing
+
+struct MissingMoleView: View {
+    @EnvironmentObject var app: AppModel
+    var body: some View {
+        VStack(spacing: 18) {
+            BigTile(symbol: "exclamationmark.triangle.fill", size: 96)
+            Text(app.t("missing.title")).font(.system(size: 28, weight: .heavy))
+            Text(app.t("missing.body")).foregroundStyle(Theme.secondary).multilineTextAlignment(.center).frame(maxWidth: 460)
+            Text("brew install mole").font(.system(size: 15, design: .monospaced))
+                .padding(.horizontal, 18).padding(.vertical, 10).glassCard(radius: 12)
+                .textSelection(.enabled)
+            Button(app.t("missing.copy")) {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString("brew install mole", forType: .string)
+            }
+            .buttonStyle(PrimaryButtonStyle(large: false))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}

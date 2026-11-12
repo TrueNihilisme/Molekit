@@ -69,22 +69,22 @@ public struct MoleCLI: Sendable {
 
             // Read both pipes concurrently so a full buffer never blocks `mo`.
             let group = DispatchGroup()
-            var outData = Data(), errData = Data()
+            let outBox = DataBox(), errBox = DataBox()
             group.enter()
             DispatchQueue.global().async {
-                outData = out.fileHandleForReading.readDataToEndOfFile()
+                outBox.data = out.fileHandleForReading.readDataToEndOfFile()
                 group.leave()
             }
             group.enter()
             DispatchQueue.global().async {
-                errData = err.fileHandleForReading.readDataToEndOfFile()
+                errBox.data = err.fileHandleForReading.readDataToEndOfFile()
                 group.leave()
             }
             process.terminationHandler = { proc in
                 group.wait()
                 continuation.resume(returning: Output(
-                    stdout: ANSI.strip(String(decoding: outData, as: UTF8.self)),
-                    stderr: ANSI.strip(String(decoding: errData, as: UTF8.self)),
+                    stdout: ANSI.strip(String(decoding: outBox.data, as: UTF8.self)),
+                    stderr: ANSI.strip(String(decoding: errBox.data, as: UTF8.self)),
                     status: proc.terminationStatus
                 ))
             }
@@ -148,6 +148,9 @@ public struct MoleCLI: Sendable {
         }
     }
 }
+
+/// Holds bytes read on a background queue; access is ordered by the DispatchGroup.
+final class DataBox: @unchecked Sendable { var data = Data() }
 
 /// Splits a byte stream into lines.
 final class LineBuffer: @unchecked Sendable {
