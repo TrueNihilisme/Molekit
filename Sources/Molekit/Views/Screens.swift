@@ -285,7 +285,7 @@ struct DiskView: View {
 
     private var breadcrumb: some View {
         HStack(spacing: 8) {
-            Image(systemName: "internaldrive.fill").foregroundStyle(Color(hex: 0x7EA6D8))
+            Image(systemName: "internaldrive.fill").foregroundStyle(Theme.accent.opacity(0.8))
             ForEach(Array(model.stack.enumerated()), id: \.offset) { i, level in
                 if i > 0 { Text("›").foregroundStyle(Theme.tertiary) }
                 Button(level.title) { model.jump(to: i) }
@@ -363,7 +363,7 @@ struct DiskView: View {
                 }
                 ForEach(files) { file in
                     HStack(spacing: 10) {
-                        Image(systemName: "doc").foregroundStyle(Color(hex: 0x7EA6D8))
+                        Image(systemName: "doc").foregroundStyle(Theme.accent.opacity(0.8))
                         VStack(alignment: .leading, spacing: 1) {
                             Text(file.name).font(.ui(13, .semibold)).lineLimit(1)
                             Text(PathDisplay.tilde((file.path as NSString).deletingLastPathComponent))

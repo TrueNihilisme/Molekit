@@ -167,7 +167,7 @@ struct NavItem: View {
         Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: symbol).font(.ui(16, .semibold)).frame(width: 22)
-                    .foregroundStyle(on ? Theme.ink : (hover ? Theme.accent : Color(hex: 0x7EA6D8)))
+                    .foregroundStyle(on ? Theme.ink : (hover ? Theme.accent : Theme.accent.opacity(0.8)))
                     .shadow(color: hover && !on ? Theme.accent.opacity(0.6) : .clear, radius: 5)
                 Text(title).font(.ui(15, on ? .bold : .medium))
                     .foregroundStyle(on ? Theme.ink : (hover ? Theme.accent : Theme.text.opacity(0.86)))
@@ -287,7 +287,7 @@ struct DiskBar: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: "internaldrive.fill").foregroundStyle(Color(hex: 0x7EA6D8))
+            Image(systemName: "internaldrive.fill").foregroundStyle(Theme.accent.opacity(0.8))
             if let space {
                 Text(app.t("disk.freeOf", app.size(space.free), app.size(space.total)))
                     .font(.ui(13)).foregroundStyle(Theme.text.opacity(0.88)).lineLimit(1)
