@@ -134,9 +134,17 @@ struct CleanView: View {
                         }
                     }
                 }
-                .padding(.bottom, 4)
+                .padding(.bottom, 20)
+                .id(model.phase == .scanning ? "live" : "result")
             }
-            .scrollIndicators(.never)
+            .scrollIndicators(.automatic)
+            .mask(
+                VStack(spacing: 0) {
+                    Color.black
+                    LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: 28)
+                }
+            )
+            .padding(.bottom, 6)
 
             MascotCard(mood: mascotMood, text: mascotText)
         }
@@ -181,6 +189,7 @@ struct CleanView: View {
             }
             .padding(.leading, 16).padding(.trailing, 16).frame(height: 58)
             .glassCard(highlighted: current ? Theme.green : nil)
+            .id("live-" + section.title)
             .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
