@@ -45,6 +45,7 @@ public struct CleanPreview: Sendable {
         public let title: String
         public let items: [Item]
         public var id: String { title }
+        public init(title: String, items: [Item]) { self.title = title; self.items = items }
         public var bytes: Int64 { items.reduce(0) { $0 + $1.bytes } }
     }
     public let sections: [Section]

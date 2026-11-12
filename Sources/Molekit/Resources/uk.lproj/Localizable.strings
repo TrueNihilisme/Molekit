@@ -61,6 +61,12 @@
 "welcome.f1" = "Знаходить кеші, логи й залишки програм";
 "welcome.f2" = "Знає Xcode, npm, браузери й ігрові лаунчери";
 "welcome.f3" = "Нічого не видаляє, доки не натиснеш «Почистити»";
+"mascot.digging" = "Копаю…";
+"mascot.cleaning" = "Прибираю…";
+"mascot.found" = "Знайшов %@!";
+"mascot.nothing" = "Тут уже чисто.";
+"mascot.done" = "Чисто!\nЗвільнено %@";
+"mascot.idle" = "Готовий копати.";
 "clean.stop" = "Зупинити";
 "clean.clean" = "Почистити";
 "clean.scan" = "Сканувати";

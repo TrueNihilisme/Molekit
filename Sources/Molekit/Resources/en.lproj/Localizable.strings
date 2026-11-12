@@ -61,6 +61,12 @@
 "welcome.f1" = "Finds app caches, logs and leftovers";
 "welcome.f2" = "Knows Xcode, npm, browsers and game launchers";
 "welcome.f3" = "Removes nothing until you press Clean";
+"mascot.digging" = "Digging…";
+"mascot.cleaning" = "Cleaning up…";
+"mascot.found" = "Found %@!";
+"mascot.nothing" = "All tidy already.";
+"mascot.done" = "All clean!\nFreed %@";
+"mascot.idle" = "Ready to dig.";
 "clean.stop" = "Stop";
 "clean.clean" = "Clean";
 "clean.scan" = "Scan";

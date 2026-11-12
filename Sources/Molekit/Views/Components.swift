@@ -5,7 +5,8 @@ import MoleKitCore
 struct MoleMark: Shape {
     func path(in rect: CGRect) -> Path {
         let s = min(rect.width, rect.height) / 64
-        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: rect.minX + x * s, y: rect.minY + y * s) }
+        // With its stroke the mark spans x 6.5…59 and y 18.5…53.5, centre (32.75, 36); shift it to the middle.
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: rect.minX + (x - 0.75) * s, y: rect.minY + (y - 4) * s) }
         var path = Path()
         path.move(to: p(10, 50)); path.addLine(to: p(10, 30))
         path.addArc(center: p(18, 30), radius: 8 * s, startAngle: .degrees(180), endAngle: .degrees(360), clockwise: false)
@@ -22,7 +23,7 @@ struct MoleMark: Shape {
 struct MoleDot: Shape {
     func path(in rect: CGRect) -> Path {
         let s = min(rect.width, rect.height) / 64
-        return Path(ellipseIn: CGRect(x: rect.minX + (54 - 5) * s, y: rect.minY + (36 - 5) * s, width: 10 * s, height: 10 * s))
+        return Path(ellipseIn: CGRect(x: rect.minX + (54 - 5 - 0.75) * s, y: rect.minY + (36 - 5 - 4) * s, width: 10 * s, height: 10 * s))
     }
 }
 

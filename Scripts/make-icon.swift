@@ -44,7 +44,8 @@ func render(size: CGFloat) -> Data {
     // the mark, 64-unit design scaled into the tile
     let markSize = body.width * 0.62
     let s = markSize / 64
-    let ox = body.midX - markSize / 2, oy = body.midY - markSize / 2 - body.width * 0.02
+    // centre the mark's bounding box (with the stroke: x 6.5…59, y 18.5…53.5 → centre 32.75, 36) in the tile
+    let ox = body.midX - 32.75 * s, oy = body.midY - 36 * s
     func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: ox + x * s, y: oy + y * s) }
     let mark = CGMutablePath()
     mark.move(to: p(10, 50)); mark.addLine(to: p(10, 30))

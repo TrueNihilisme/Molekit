@@ -137,6 +137,27 @@ struct CleanView: View {
                 .padding(.bottom, 4)
             }
             .scrollIndicators(.never)
+
+            MascotCard(mood: mascotMood, text: mascotText)
+        }
+    }
+
+    private var mascotMood: MoleMascot.Mood {
+        switch model.phase {
+        case .scanning: return .digging
+        case .cleaning: return .cleaning
+        case .done: return .happy
+        default: return .peeking
+        }
+    }
+
+    private var mascotText: String {
+        switch model.phase {
+        case .scanning: return app.t("mascot.digging")
+        case .cleaning: return app.t("mascot.cleaning")
+        case .done: return app.t("mascot.done", app.size(model.result?.bytes ?? model.selectedBytes))
+        case .found: return model.sections.isEmpty ? app.t("mascot.nothing") : app.t("mascot.found", app.size(model.selectedBytes))
+        default: return app.t("mascot.idle")
         }
     }
 

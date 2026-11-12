@@ -96,7 +96,14 @@ final class CleanModel: ObservableObject {
 
     var sections: [CleanPreview.Section] { preview?.nonEmptySections ?? [] }
     /// Categories Mole checked and found nothing in.
-    var cleanSections: [CleanPreview.Section] { (preview?.sections ?? []).filter { $0.items.isEmpty } }
+    var cleanSections: [CleanPreview.Section] {
+        // mo 1.71 lists only non-empty categories in clean-list.txt; the live scan output has all of them.
+        let found = Set(sections.map(\.title))
+        let fromList = (preview?.sections ?? []).filter { $0.items.isEmpty }
+        let fromLive = live.filter { !found.contains($0.title) }.map { CleanPreview.Section(title: $0.title, items: []) }
+        var seen = Set<String>()
+        return (fromList + fromLive).filter { seen.insert($0.title).inserted }
+    }
     var selectedSections: [CleanPreview.Section] { sections.filter { !deselected.contains($0.title) } }
     var selectedBytes: Int64 { selectedSections.reduce(0) { $0 + $1.bytes } }
     var allSelected: Bool { deselected.isEmpty }
