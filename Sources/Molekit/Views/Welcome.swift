@@ -62,12 +62,23 @@ struct WelcomePanel: View {
                 feature("lock.shield", app.t("welcome.f3"), visible: step >= 5)
             }
             Spacer(minLength: 0)
+            HStack(spacing: 0) {
+                MoleMascot(mood: .peeking).frame(width: 220, height: 180)
+                Text(app.t("welcome.begin"))
+                    .font(.ui(28, .heavy))
+                    .foregroundStyle(LinearGradient(colors: [Color(hex: 0x7CEFFF), Theme.accent], startPoint: .top, endPoint: .bottom))
+                    .shadow(color: Theme.accent.opacity(0.4), radius: 12)
+                Spacer(minLength: 0)
+            }
+            .opacity(step >= 6 ? 1 : 0)
+            .offset(y: step >= 6 ? 0 : 30)
+            .padding(.bottom, 12)
         }
         .padding(.top, 44).padding(.horizontal, 36)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .glassCard(radius: 22)
         .onAppear {
-            for i in 1...5 {
+            for i in 1...6 {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35 * Double(i)) {
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { step = i }
                 }
