@@ -51,9 +51,8 @@ struct WelcomePanel: View {
     @State private var shimmer = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 26) {
-            Spacer(minLength: 0)
-            VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 34) {
+            VStack(alignment: .leading, spacing: -6) {
                 line("Small mole.", visible: step >= 1)
                 line("Big cleanup.", visible: step >= 2)
             }
@@ -64,7 +63,7 @@ struct WelcomePanel: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 34)
+        .padding(.top, 44).padding(.horizontal, 36)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .glassCard(radius: 22)
         .onAppear {
@@ -73,23 +72,26 @@ struct WelcomePanel: View {
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { step = i }
                 }
             }
-            withAnimation(.linear(duration: 3.2).repeatForever(autoreverses: false)) { shimmer = true }
+            withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: false).delay(0.8)) { shimmer = true }
         }
     }
 
     private func line(_ text: String, visible: Bool) -> some View {
-        Text(text)
-            .font(.ui(46, .heavy)).tracking(-1.2)
-            .foregroundStyle(Theme.text.opacity(0.18))
+        let font = Font.ui(60, .heavy)
+        return Text(text)
+            .font(font).tracking(-1.8)
+            .foregroundStyle(LinearGradient(colors: [Color(hex: 0x7CEFFF), Theme.accent, Theme.accentDeep],
+                                            startPoint: .topLeading, endPoint: .bottomTrailing))
             .overlay(
-                LinearGradient(stops: [.init(color: Theme.accent, location: 0),
-                                       .init(color: .white, location: 0.45),
-                                       .init(color: Theme.accentDeep, location: 0.9)],
-                               startPoint: .leading, endPoint: .trailing)
-                    .offset(x: shimmer ? 240 : -240)
-                    .mask(Text(text).font(.ui(46, .heavy)).tracking(-1.2))
+                // a white glint sweeping across the letters
+                LinearGradient(colors: [.clear, .white.opacity(0.85), .clear], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 110)
+                    .rotationEffect(.degrees(18))
+                    .offset(x: shimmer ? 520 : -520)
+                    .mask(Text(text).font(font).tracking(-1.8))
             )
-            .shadow(color: Theme.accent.opacity(0.25), radius: 14)
+            .shadow(color: Theme.accent.opacity(0.35), radius: 18)
+            .fixedSize()
             .opacity(visible ? 1 : 0)
             .offset(y: visible ? 0 : 18)
             .blur(radius: visible ? 0 : 6)
