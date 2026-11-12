@@ -209,6 +209,7 @@
 "history.itemsFound" = "Знайдено об'єктів: %ld";
 "history.failed" = "Помилок: %ld";
 "history.seeLog" = "Права кнопка — відкрити журнал";
+"history.showPreviews" = "Показати порожні перегляди";
 "history.done" = "Виконано";
 "history.preview" = "Перегляд";
 "history.cmd.clean" = "Очищення";

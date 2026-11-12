@@ -191,6 +191,7 @@
 "history.itemsFound" = "%ld items found";
 "history.failed" = "Errors: %ld";
 "history.seeLog" = "Right-click to open the log";
+"history.showPreviews" = "Show empty previews";
 "history.done" = "Done";
 "history.preview" = "Preview";
 "history.cmd.clean" = "Clean";

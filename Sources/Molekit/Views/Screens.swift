@@ -561,6 +561,12 @@ struct StatusView: View {
 struct HistoryView: View {
     @EnvironmentObject var app: AppModel
     @ObservedObject var model: HistoryModel
+    @AppStorage("history.showPreviews") private var showPreviews = false
+
+    /// Empty previews (0 found) mostly come from Molekit's own uninstall previews; hidden unless asked.
+    private var visible: [HistoryResult.Session] {
+        showPreviews ? model.sessions : model.sessions.filter { !($0.isPreview && ($0.items ?? 0) == 0) }
+    }
 
     var body: some View {
         let today = model.today
@@ -574,10 +580,16 @@ struct HistoryView: View {
                 stat(failed == 0 ? "checkmark.shield.fill" : "xmark.shield.fill", app.t("history.errors"), "\(failed)", failed == 0 ? Theme.green : Theme.red,
                      alert: failed > 0)
             }
-            Text(app.t("history.recent")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+            HStack {
+                Text(app.t("history.recent")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
+                Spacer()
+                Toggle(app.t("history.showPreviews"), isOn: $showPreviews)
+                    .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
+                    .font(.ui(13)).foregroundStyle(Theme.secondary)
+            }
             ScrollView {
                 LazyVStack(spacing: 6) {
-                    ForEach(model.sessions) { row($0) }
+                    ForEach(visible) { row($0) }
                     if model.sessions.isEmpty && !model.loading {
                         Text(app.t("history.empty")).foregroundStyle(Theme.secondary).padding(30)
                     }
