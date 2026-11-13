@@ -66,7 +66,21 @@ More:
 
 ## Install
 
-Molekit is not notarized (no paid Apple Developer account), so build it yourself:
+### Download
+
+1. Install Mole: `brew install mole`
+2. Download `Molekit-<version>.dmg` from [Releases](https://github.com/TrueNihilisme/Molekit/releases/latest),
+   open it and drag **Molekit** to **Applications**.
+3. Molekit is signed ad-hoc but not notarized by Apple (that needs a paid Apple Developer account),
+   so macOS blocks the first launch. Remove the quarantine flag once:
+
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/Molekit.app
+   ```
+
+The app is universal (Apple silicon and Intel). Each release lists the SHA-256 of its DMG.
+
+### Build from source
 
 ```bash
 git clone https://github.com/TrueNihilisme/Molekit.git
@@ -74,13 +88,8 @@ cd Molekit
 ./build.sh --install    # builds Molekit.app and copies it to /Applications
 ```
 
-Needs Xcode or the Xcode command line tools (Swift 6). `./build.sh` without `--install` leaves the app in `build/`.
-
-If you got a prebuilt `Molekit.app` from someone else, macOS will block it until you remove the quarantine flag:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/Molekit.app
-```
+Needs Xcode or the Xcode command line tools (Swift 6). `./build.sh` without `--install` leaves the
+app in `build/`. An app you build yourself is not quarantined, so it opens straight away.
 
 ### Full Disk Access
 
