@@ -19,6 +19,20 @@ you want to keep, and runs Mole for you.
 > Molekit is an independent project. It is not made by, affiliated with, or endorsed by the
 > author of Mole or by [mole.fit](https://mole.fit/), the official Mole for Mac app.
 
+## Why Molekit
+
+- **No deletion engine of its own.** Molekit never removes files itself; every cleanup is a `mo`
+  command, so all of Mole's protections apply. The one file it writes is Mole's whitelist, and only
+  for the categories you untick (see below).
+- **Private.** No analytics, no crash reporting, no accounts. The only network request is the
+  optional Mole update check.
+- **Native and light.** Swift and SwiftUI, no Electron or web view. The mole mascot is drawn in code.
+- **Honest about interactive steps.** Where Mole wants your confirmation (uninstall, slim,
+  installers), Molekit shows a preview and then hands you a real terminal inside the window,
+  instead of faking your answers.
+- **Built to survive Mole updates.** JSON fields are optional and text parsing is covered by tests,
+  so a new Mole version degrades gracefully instead of crashing the app.
+
 ## Features
 
 | Screen | What it does | Mole command |
@@ -68,12 +82,24 @@ If you got a prebuilt `Molekit.app` from someone else, macOS will block it until
 xattr -dr com.apple.quarantine /Applications/Molekit.app
 ```
 
+### Full Disk Access
+
+macOS hides some folders (other apps' containers, Mail, Safari data and more) from apps without
+Full Disk Access. Mole runs inside Molekit, so without it Mole may find less than it could.
+For the full picture: **System Settings → Privacy & Security → Full Disk Access → add Molekit**,
+then restart Molekit.
+
 ## How unticking works
 
 Mole cleans everything a run finds; it has no per-category switch. When you untick a category,
 Molekit adds its folders to Mole's own whitelist (`~/.config/mole/whitelist`) for that one run
 and then restores the file exactly as it was. A plain path in the whitelist protects the folder
-and everything inside it. If the app quits mid-run, it restores the file on the next launch.
+and everything inside it.
+
+If the Mac loses power or Molekit is killed in the middle of such a run, the extra entries stay in
+the whitelist until Molekit starts again and restores it. If you run `mo` in Terminal before that,
+open `~/.config/mole/whitelist` and delete the lines below `# Molekit: unticked in the app, temporary`
+(or the whole file, if it starts with `# Mole defaults (written by Molekit…`).
 
 ## Privacy
 

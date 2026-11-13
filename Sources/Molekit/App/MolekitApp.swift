@@ -23,7 +23,7 @@ struct RootView: View {
     @EnvironmentObject var app: AppModel
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 0) {
             SidebarView()
             ZStack {
                 if app.cli == nil && !DemoShots.isActive {
@@ -32,8 +32,10 @@ struct RootView: View {
                     content
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .clipped()   // a screen taller than the window must not push the sidebar up
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .foregroundStyle(Theme.text)
         .background {
             ZStack {

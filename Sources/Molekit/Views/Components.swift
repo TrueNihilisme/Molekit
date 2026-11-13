@@ -70,7 +70,7 @@ struct SidebarView: View {
         }
         .padding(.horizontal, 14).padding(.bottom, 16)
         .frame(width: 236)
-        .frame(maxHeight: .infinity)
+        .frame(maxHeight: .infinity, alignment: .top)
         .background(LinearGradient(colors: [.white.opacity(0.055), .white.opacity(0.02)], startPoint: .top, endPoint: .bottom))
         .overlay(alignment: .trailing) { Rectangle().fill(.white.opacity(0.07)).frame(width: 1) }
         .onAppear { app.updates.check() }
