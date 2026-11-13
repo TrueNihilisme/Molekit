@@ -56,7 +56,7 @@ enum DemoShots {
 
     @MainActor
     private static func fill(_ app: AppModel) {
-        app.language = .en
+        app.language = CommandLine.arguments.contains("--uk") ? .uk : .en
         let home = NSHomeDirectory()
         DiskSpace.override = (182_400_000_000, 494_380_000_000)
         app.updates.installed = "1.71.0"
