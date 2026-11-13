@@ -183,10 +183,12 @@ struct PurgeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Button("‹ " + app.t("nav.tools")) { app.toolScreen = nil }
-                .buttonStyle(.plain).foregroundStyle(Theme.accent).font(.ui(13, .semibold))
+            Button { app.toolScreen = nil } label: { Label(app.t("nav.tools"), systemImage: "chevron.left") }
+                .buttonStyle(GhostButtonStyle())
             PageHeader(title: app.t("tools.purge.title"), subtitle: app.t("purge.subtitle")) {
-                Button(app.t("purge.rescan")) { model.scan() }.buttonStyle(GhostButtonStyle())
+                if model.phase != .idle {
+                    Button(app.t("purge.rescan")) { model.scan() }.buttonStyle(GhostButtonStyle())
+                }
             }
             ScrollView {
                 LazyVStack(spacing: 6) {

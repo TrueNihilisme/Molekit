@@ -100,8 +100,8 @@ struct ToolScreenLayout<Content: View, Footer: View>: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 16) {
-                Button("‹ " + app.t("nav.tools")) { app.toolScreen = nil }
-                    .buttonStyle(.plain).foregroundStyle(Theme.accent).font(.ui(13, .semibold))
+                Button { app.toolScreen = nil } label: { Label(app.t("nav.tools"), systemImage: "chevron.left") }
+                    .buttonStyle(GhostButtonStyle())
                 PageHeader(title: title, subtitle: subtitle) {
                     Text(command).font(.mono(12)).foregroundStyle(Theme.text.opacity(0.78))
                         .padding(.horizontal, 10).padding(.vertical, 4)
