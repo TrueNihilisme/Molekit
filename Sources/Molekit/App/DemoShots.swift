@@ -37,7 +37,7 @@ enum DemoShots {
             }
             for (index, (name, setup)) in steps.enumerated() {
                 setup()
-                try? await Task.sleep(for: .seconds(index == 0 ? 3.2 : 1.6))
+                try? await Task.sleep(for: .seconds(index == 0 ? 3.2 : 2.6))   // let heavier screens finish drawing
                 capture(to: folder.appendingPathComponent("\(name).png"))
             }
             NSApp.terminate(nil)

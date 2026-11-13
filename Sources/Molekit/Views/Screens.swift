@@ -61,9 +61,9 @@ struct OverviewView: View {
             Text(app.t("overview.health")).font(.ui(15, .semibold)).foregroundStyle(Theme.text.opacity(0.8))
                 .frame(maxWidth: .infinity, alignment: .leading)
             ZStack {
-                ProgressRing(progress: Double(status.snapshot?.healthScore ?? 0) / 100, size: 168, lineWidth: 8)
+                ProgressRing(progress: Double(status.snapshot?.healthScore ?? 0) / 100, size: 150, lineWidth: 8)
                 VStack(spacing: 2) {
-                    Text("\(status.snapshot?.healthScore ?? 0)").font(.ui(46, .heavy)).monospacedDigit()
+                    Text("\(status.snapshot?.healthScore ?? 0)").font(.ui(42, .heavy)).monospacedDigit()
                     Text(app.t("overview.of100")).font(.ui(13)).foregroundStyle(Theme.secondary)
                 }
             }
@@ -105,13 +105,13 @@ struct OverviewView: View {
 
     private func actionCard(symbol: String, title: String, hint: String, value: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 12) {
-                BigTile(symbol: symbol, size: 80)
-                VStack(spacing: 4) {
+            VStack(spacing: 10) {
+                BigTile(symbol: symbol, size: 64)
+                VStack(spacing: 3) {
                     Text(title).font(.ui(17, .bold))
                     Text(hint).font(.ui(13)).foregroundStyle(Theme.secondary).lineLimit(1)
-                    Text(value).font(.ui(26, .heavy)).monospacedDigit()
-                        .foregroundStyle(Theme.accent).shadow(color: Theme.accent.opacity(0.35), radius: 8).padding(.top, 2)
+                    Text(value).font(.ui(24, .heavy)).monospacedDigit()
+                        .foregroundStyle(Theme.accent).shadow(color: Theme.accent.opacity(0.35), radius: 8).padding(.top, 1)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -634,7 +634,7 @@ struct HistoryView: View {
     private func errorRow(_ s: HistoryResult.Session, errors: Int) -> some View {
         let date = HistoryModel.date(s.startedAt)
         return HStack(spacing: 14) {
-            Text(date.map { $0.formatted(date: Calendar.current.isDateInToday($0) ? .omitted : .abbreviated, time: .shortened) } ?? "—")
+            Text(date.map(shortDate) ?? "—")
                 .font(.ui(13, .semibold)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.78))
                 .frame(width: 110, alignment: .leading)
             GlyphTile(symbol: symbol(s.baseCommand), tint: Theme.red)
@@ -663,7 +663,7 @@ struct HistoryView: View {
         let done = !s.isPreview
         let date = HistoryModel.date(s.startedAt)
         return HStack(spacing: 14) {
-            Text(date.map { $0.formatted(date: Calendar.current.isDateInToday($0) ? .omitted : .abbreviated, time: .shortened) } ?? "—")
+            Text(date.map(shortDate) ?? "—")
                 .font(.ui(13, .semibold)).monospacedDigit().foregroundStyle(Theme.text.opacity(0.78))
                 .frame(width: 110, alignment: .leading)
             GlyphTile(symbol: symbol(s.baseCommand))
@@ -685,6 +685,14 @@ struct HistoryView: View {
         }
         .padding(.horizontal, 18).frame(height: 62)
         .glassCard(highlighted: done ? Theme.green : nil)
+    }
+
+    /// "23:42" today, "12.11, 23:42" otherwise: always one line.
+    private func shortDate(_ d: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: app.language == .uk ? "uk_UA" : "en_US")
+        f.setLocalizedDateFormatFromTemplate(Calendar.current.isDateInToday(d) ? "jj:mm" : "ddMM jj:mm")
+        return f.string(from: d)
     }
 
     private func symbol(_ command: String) -> String {
