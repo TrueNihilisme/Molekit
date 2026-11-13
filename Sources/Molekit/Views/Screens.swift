@@ -13,6 +13,7 @@ struct OverviewView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             PageHeader(title: app.t("nav.overview"), subtitle: "Small mole. Big cleanup.")
+            FullDiskAccessBanner(model: app.permissions)
             HStack(alignment: .top, spacing: 14) {
                 healthCard.frame(width: 300)
                 VStack(spacing: 16) {

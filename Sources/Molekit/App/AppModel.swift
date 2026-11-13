@@ -28,6 +28,7 @@ final class AppModel: ObservableObject {
     let purge: PurgeModel
     let tools: ToolsModel
     let updates: UpdateModel
+    let permissions = PermissionModel()
 
     init() {
         let saved = UserDefaults.standard.string(forKey: "language").flatMap(AppLanguage.init(rawValue:))

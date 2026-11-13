@@ -52,6 +52,7 @@ struct WelcomePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 34) {
+            FullDiskAccessBanner(model: app.permissions)
             VStack(alignment: .leading, spacing: -6) {
                 line("Small mole.", visible: step >= 1)
                 line("Big cleanup.", visible: step >= 2)

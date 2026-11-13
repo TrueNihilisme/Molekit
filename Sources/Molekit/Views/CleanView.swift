@@ -93,6 +93,7 @@ struct CleanView: View {
 
     private var resultList: some View {
         VStack(spacing: 8) {
+            FullDiskAccessBanner(model: app.permissions)
             HStack(spacing: 14) {
                 if model.phase == .found {
                     GreenCheckbox(isOn: Binding(get: { model.allSelected }, set: { _ in model.toggleAll() }), label: app.t("clean.selectAll"))

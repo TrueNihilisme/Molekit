@@ -55,6 +55,9 @@
 "tip.5" = "Right-click any folder on the Disk screen to show it in Finder.";
 "tip.6" = "Click a tile under This Mac to open the matching System Settings.";
 "overview.healthHint" = "Mole's score: starts at 100, loses points for high CPU or memory load, a nearly full disk, heat and battery wear.";
+"fda.title" = "Full Disk Access is off";
+"fda.body" = "Without it Mole skips some folders: Safari, Mail, other apps' containers. Add Molekit, then come back.";
+"fda.open" = "Open Settings";
 "disk.freeOf" = "%@ free of %@";
 
 /* Clean */
