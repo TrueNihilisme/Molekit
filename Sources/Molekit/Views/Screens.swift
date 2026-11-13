@@ -32,7 +32,7 @@ struct OverviewView: View {
             }
             HStack {
                 if let last = history.lastRealClean {
-                    Text(app.t("overview.lastClean", HistoryModel.date(last.startedAt).map { $0.formatted(.relative(presentation: .named)) } ?? (last.startedAt ?? ""), app.size(last.sizeBytes)))
+                    Text(app.t("overview.lastClean", HistoryModel.date(last.startedAt).map { $0.formatted(Date.RelativeFormatStyle(presentation: .named).locale(Locale(identifier: app.language == .uk ? "uk_UA" : "en_US"))) } ?? (last.startedAt ?? ""), app.size(last.sizeBytes)))
                 } else {
                     Text(app.t("overview.noClean"))
                 }
@@ -781,7 +781,7 @@ struct TipsTicker: View {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Image(systemName: index == 0 ? "gauge.with.dots.needle.67percent" : "lightbulb.max")
                         .font(.ui(15, .semibold))
-                    (Text(app.t(index == 0 ? "tips.label.score" : "tips.label")).fontWeight(.bold) + Text("  " + app.t("tip.\(index)")))
+                    (Text(index == 0 ? app.t("tips.label.score", app.status.snapshot?.healthScore ?? 100) : app.t("tips.label")).fontWeight(.bold) + Text("  " + app.t("tip.\(index)")))
                         .font(.ui(15))
                         .fixedSize(horizontal: false, vertical: true)
                 }

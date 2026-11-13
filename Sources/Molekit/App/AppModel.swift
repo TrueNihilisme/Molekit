@@ -33,13 +33,14 @@ final class AppModel: ObservableObject {
         let saved = UserDefaults.standard.string(forKey: "language").flatMap(AppLanguage.init(rawValue:))
         language = saved ?? .systemDefault
         cli = MoleCLI.locate()
-        clean = CleanModel(cli: cli)
-        status = StatusModel(cli: cli)
-        history = HistoryModel(cli: cli)
-        disk = DiskModel(cli: cli)
-        purge = PurgeModel(cli: cli)
-        tools = ToolsModel(cli: cli)
-        updates = UpdateModel(cli: cli)
+        let work = DemoShots.isActive ? nil : cli   // demo screenshots never run mo
+        clean = CleanModel(cli: work)
+        status = StatusModel(cli: work)
+        history = HistoryModel(cli: work)
+        disk = DiskModel(cli: work)
+        purge = PurgeModel(cli: work)
+        tools = ToolsModel(cli: work)
+        updates = UpdateModel(cli: work)
         clean.onFinished = { [weak history] in
             // mo writes the history entry as it exits; read it a moment later.
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { history?.load() }
@@ -58,7 +59,10 @@ final class AppModel: ObservableObject {
 
 /// Free space as Finder shows it (includes purgeable space macOS can reclaim).
 enum DiskSpace {
+    /// Set only by the demo screenshot mode.
+    static var override: (free: Int64, total: Int64)?
     static func root() -> (free: Int64, total: Int64)? {
+        if let override { return override }
         let url = URL(fileURLWithPath: "/")
         guard let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]),
               let free = values.volumeAvailableCapacityForImportantUsage,

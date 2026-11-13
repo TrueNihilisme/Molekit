@@ -12,6 +12,7 @@ struct MolekitApp: App {
                 .environmentObject(app)
                 .frame(minWidth: 1180, minHeight: 760)
                 .preferredColorScheme(.dark)
+                .onAppear { if DemoShots.isActive { DemoShots.run(app) } }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1240, height: 800)
@@ -25,7 +26,7 @@ struct RootView: View {
         HStack(spacing: 0) {
             SidebarView()
             ZStack {
-                if app.cli == nil {
+                if app.cli == nil && !DemoShots.isActive {
                     MissingMoleView()
                 } else {
                     content

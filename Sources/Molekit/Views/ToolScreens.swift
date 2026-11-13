@@ -290,8 +290,11 @@ struct AppIcon: View {
     let path: String?
     var size: CGFloat = 28
     var body: some View {
-        Image(nsImage: path.map { NSWorkspace.shared.icon(forFile: $0) } ?? NSImage())
-            .resizable().frame(width: size, height: size)
+        if let path, FileManager.default.fileExists(atPath: path) {
+            Image(nsImage: NSWorkspace.shared.icon(forFile: path)).resizable().frame(width: size, height: size)
+        } else {
+            GlyphTile(symbol: "app.dashed", size: size)
+        }
     }
 }
 

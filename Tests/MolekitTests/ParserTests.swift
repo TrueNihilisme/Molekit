@@ -157,11 +157,11 @@ final class ToolParserTests: XCTestCase {
         let out = """
         ○ DRY RUN MODE, No apps will be changed
           Google Chrome               581.5MB
-          Claude Status Bar             513KB
+          Example Helper               513KB
         2 apps, 582.0MB of Intel code
         """
         let p = SlimPreview.parse(out)
-        XCTAssertEqual(p.apps.map(\.name), ["Google Chrome", "Claude Status Bar"])
+        XCTAssertEqual(p.apps.map(\.name), ["Google Chrome", "Example Helper"])
         XCTAssertEqual(p.apps[1].bytes, 513_000)
         XCTAssertEqual(p.reportedTotal, 582_000_000)
     }

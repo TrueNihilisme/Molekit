@@ -46,7 +46,7 @@
 "installer.run" = "Remove…";
 "purge.prompt" = "Find build output in your projects. Nothing is removed during the scan.";
 "tips.label" = "Did you know?";
-"tips.label.score" = "100 of 100:";
+"tips.label.score" = "%ld of 100:";
 "tip.0" = "Mole's health score. It drops with high CPU or memory load, a nearly full disk, heat and battery wear.";
 "tip.1" = "Untick a category before cleaning and Molekit protects it for that run.";
 "tip.2" = "mo purge clears build output like node_modules and .venv. Your code stays.";
