@@ -18,6 +18,7 @@ final class PermissionModel: ObservableObject {
     }
 
     func check() {
+        if DemoShots.isActive { hasFullDiskAccess = true; return }   // screenshots show the normal state
         let home = NSHomeDirectory()
         let probes = ["/Library/Safari", "/Library/Mail"].map { home + $0 }
             .filter { FileManager.default.fileExists(atPath: $0) }

@@ -150,6 +150,7 @@ struct MascotCard: View {
                 .foregroundStyle(LinearGradient(colors: [Color(hex: 0x7CEFFF), Theme.accent], startPoint: .top, endPoint: .bottom))
                 .shadow(color: Theme.accent.opacity(0.35), radius: 10)
                 .multilineTextAlignment(.leading)
+                .minimumScaleFactor(0.6)
                 .contentTransition(.opacity)
                 .animation(.easeInOut(duration: 0.3), value: text)
             Spacer(minLength: 12)

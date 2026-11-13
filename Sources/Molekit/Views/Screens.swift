@@ -11,6 +11,15 @@ struct OverviewView: View {
     @ObservedObject var history: HistoryModel
 
     var body: some View {
+        // Scrolls only when it does not fit (e.g. with the Full Disk Access banner on a small window).
+        ViewThatFits(in: .vertical) {
+            page
+            ScrollView { page }.scrollIndicators(.automatic)
+        }
+        .onAppear { status.refreshOnce(); history.load() }
+    }
+
+    private var page: some View {
         VStack(alignment: .leading, spacing: 18) {
             PageHeader(title: app.t("nav.overview"), subtitle: "Small mole. Big cleanup.")
             FullDiskAccessBanner(model: app.permissions)
@@ -45,7 +54,6 @@ struct OverviewView: View {
             .padding(.horizontal, 18).padding(.vertical, 14).glassCard()
         }
         .padding(.top, 26).padding(.horizontal, 24).padding(.bottom, 22)
-        .onAppear { status.refreshOnce(); history.load() }
     }
 
     private var healthCard: some View {

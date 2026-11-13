@@ -67,6 +67,7 @@ struct WelcomePanel: View {
                 MoleMascot(mood: .peeking).frame(width: 220, height: 180)
                 Text(app.t("welcome.begin"))
                     .font(.ui(28, .heavy))
+                    .lineLimit(1).minimumScaleFactor(0.6)
                     .foregroundStyle(LinearGradient(colors: [Color(hex: 0x7CEFFF), Theme.accent], startPoint: .top, endPoint: .bottom))
                     .shadow(color: Theme.accent.opacity(0.4), radius: 12)
                 Spacer(minLength: 0)

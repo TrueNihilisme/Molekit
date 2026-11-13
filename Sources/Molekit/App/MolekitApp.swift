@@ -23,6 +23,15 @@ struct RootView: View {
     @EnvironmentObject var app: AppModel
 
     var body: some View {
+        // GeometryReader pins the layout to the window: a screen taller than the window
+        // can never grow the root and shift the sidebar.
+        GeometryReader { geo in
+            layout.frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+        }
+        .ignoresSafeArea(.container, edges: .top)
+    }
+
+    private var layout: some View {
         HStack(alignment: .top, spacing: 0) {
             SidebarView()
             ZStack {
@@ -33,7 +42,7 @@ struct RootView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .clipped()   // a screen taller than the window must not push the sidebar up
+            .clipped()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .foregroundStyle(Theme.text)
