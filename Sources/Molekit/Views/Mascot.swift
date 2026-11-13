@@ -143,8 +143,9 @@ struct MascotCard: View {
     let text: String
 
     var body: some View {
-        HStack(spacing: 0) {
-            MoleMascot(mood: mood).frame(width: 220)
+        HStack(spacing: 18) {
+            Spacer(minLength: 0)
+            MoleMascot(mood: mood).frame(width: 200)
             Text(text)
                 .font(.ui(20, .bold))
                 .foregroundStyle(LinearGradient(colors: [Color(hex: 0x7CEFFF), Theme.accent], startPoint: .top, endPoint: .bottom))
@@ -153,8 +154,10 @@ struct MascotCard: View {
                 .minimumScaleFactor(0.6)
                 .contentTransition(.opacity)
                 .animation(.easeInOut(duration: 0.3), value: text)
-            Spacer(minLength: 12)
+                .fixedSize(horizontal: true, vertical: false)
+            Spacer(minLength: 0)
         }
+        .padding(.horizontal, 20)
         .frame(maxWidth: .infinity, minHeight: 170, maxHeight: 210)
         .glassCard(radius: 20)
     }

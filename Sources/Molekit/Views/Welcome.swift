@@ -63,8 +63,9 @@ struct WelcomePanel: View {
                 feature("lock.shield", app.t("welcome.f3"), visible: step >= 5)
             }
             Spacer(minLength: 0)
-            HStack(spacing: 0) {
-                MoleMascot(mood: .peeking).frame(width: 220, height: 180)
+            HStack(spacing: 18) {
+                Spacer(minLength: 0)
+                MoleMascot(mood: .peeking).frame(width: 200, height: 180)
                 Text(app.t("welcome.begin"))
                     .font(.ui(28, .heavy))
                     .lineLimit(1).minimumScaleFactor(0.6)
