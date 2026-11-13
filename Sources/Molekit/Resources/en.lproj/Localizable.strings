@@ -58,7 +58,7 @@
 "disk.freeOf" = "%@ free of %@";
 
 /* Clean */
-"welcome.begin" = "Let's begin!";
+"welcome.begin" = "Ready to dig!";
 "welcome.f1" = "Finds app caches, logs and leftovers";
 "welcome.f2" = "Knows Xcode, npm, browsers and game launchers";
 "welcome.f3" = "Removes nothing until you press Clean";
