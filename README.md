@@ -62,13 +62,26 @@ More:
 ## Requirements
 
 - macOS 14 Sonoma or later
-- [Mole](https://github.com/tw93/Mole) installed: `brew install mole`
+- [Mole](https://github.com/tw93/Mole), installed with [Homebrew](https://brew.sh) (see below)
 
 ## Install
 
 ### Download
 
-1. Install Mole: `brew install mole`
+1. Install Mole. It comes through [Homebrew](https://brew.sh), the package manager for macOS.
+   If you don't have Homebrew yet, paste this into Terminal (the command from brew.sh):
+
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+   Then install Mole:
+
+   ```bash
+   brew install mole
+   ```
+
+   Other ways to install Mole are in [its README](https://github.com/tw93/Mole).
 2. Download `Molekit-<version>.dmg` from [Releases](https://github.com/TrueNihilisme/Molekit/releases/latest),
    open it and drag **Molekit** to **Applications**.
 3. Molekit is signed ad-hoc but not notarized by Apple (that needs a paid Apple Developer account),
